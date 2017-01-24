@@ -78,7 +78,16 @@ int main(int argc, char **argv)
 	char* inputString = argv[1];
 	int len = strlen(inputString);
 	for (int index = 0; i< len;index++){
-		if ()
+		if (!isAlpha(inputString[index]){
+            //create new pointer and add line terminating character to array
+
+            //Create new node
+
+            //push node onto heap
+
+            
+
+        }
 	}
 
 
