@@ -6,9 +6,13 @@
 #define RC(x) 2 * x + 2
 #define PAR(x) (x - 1) / 2
 
+//TODO: make all methods return something, at least an int to indicate status
+//TODO: clean up code and comment for submission
+//TODO: test and generate edge cases
+
 typedef struct HeapNode
 {
-	Char * word;
+	char * word;
 } HeapNode;
 
 typedef struct LexHeap
@@ -17,19 +21,19 @@ typedef struct LexHeap
 	HeapNode * root;
 } LexHeap;
 
-LexHeap buildHeap(int size){
+LexHeap buildHeap(){
 	LexHeap heap;
 	heap.size=0;
 	return heap;
 }
 
-void push(LexHeap *heap, Char* word) {
+void push(LexHeap *heap, char* word) {
 	if(heap->size) 
 	{
-        heap->root = realloc(heap->root, (size + 1) * sizeof(node));
+        heap->root = realloc(heap->root, (heap->size + 1) * sizeof(HeapNode));
     } 
     else {
-        heap->root = malloc(sizeof(node)) ;
+        heap->root = malloc(sizeof(HeapNode)) ;
     }
     // initializing the node with value
     HeapNode node;
@@ -54,7 +58,7 @@ void swap(HeapNode *n1, HeapNode *n2) {
 
 void heapify(LexHeap *heap, int i) {
     int smallest = (LC(i) < heap->size && strcmp(heap->root[LC(i)].word, heap->root[i].word)<0) ? LC(i) : i ;
-    if(RC(i) < heap->size && strcmp(heap->root[RC(i)].word, heap->root[largest].word) < 0) {
+    if(RC(i) < heap->size && strcmp(heap->root[RC(i)].word, heap->root[smallest].word) < 0) {
         smallest = RC(i) ;
     }
     if(smallest != i) {
@@ -63,13 +67,17 @@ void heapify(LexHeap *heap, int i) {
     }
 }
 
-HeapNode pop(LexHeap *heap) {
-	if(heap->size) {
+char* pop(LexHeap *heap) {
+    if(heap->size) {
+        char* ret = (heap->root)->word;
         heap->root[0] = heap->root[--(heap->size)] ;
         heap->root = realloc(heap->root, heap->size * sizeof(HeapNode)) ;
         heapify(heap, 0) ;
+        return ret;
     } else {
         free(heap->root) ;
+        fprintf(stderr, "ERROR: Heap is empty, element could not be removed \n");
+        return NULL;
     }
 }
 
@@ -80,25 +88,34 @@ int main(int argc, char **argv)
         fprintf(stderr, "ERROR: Invalid numver of arguments.\nUsage: ./StringSort <Input String>\n");
         return 1;
     }
+    LexHeap heap = buildHeap();
 	char* inputString = argv[1];
 	int len = strlen(inputString);
     int tokenLength = 0; //will keep track of length of each token for mallocing
-	
-    for (int index = 0; index< len;index++){
-        if (!isAlpha(inputString[index])){
-            if(tokenLength == 0) {continue;}
+	char* ptr;
 
-            //create new pointer and add line terminating character to array
-
-            //Create new node
-
-            //push node onto heap
-
-            //set tokenLength to 0
+    for (int index = 0; index< len;index++)
+    {
+        if (!isalpha(inputString[index]))
+        {
+           if(tokenLength == 0) {continue;}
+            //allocate memory for token
+            ptr = malloc(sizeof(char)*tokenLength+1);
+            //copy vals from input string to token string and add null terminating byte.
+            memcpy(ptr,&inputString[index-tokenLength],tokenLength);
+            ptr[tokenLength]='\0';
+            push(&heap,ptr);
+            tokenLength=0;
         }
 
         else tokenLength++;        
     }
+
+    while(heap.size>0){
+        char * ret = pop(&heap);
+        printf("%s\n", ret);
+    }
+
 }
 
 
