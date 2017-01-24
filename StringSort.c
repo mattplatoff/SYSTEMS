@@ -75,20 +75,22 @@ HeapNode pop(LexHeap *heap) {
 
 int main(int argc, char **argv)
 {
+    if(argc != 2)
+    {
+        fprintf(stderr, "ERROR: Invalid numver of arguments.\nUsage: ./StringSort <Input String>\n");
+        return 1;
+    }
 	char* inputString = argv[1];
 	int len = strlen(inputString);
 	for (int index = 0; i< len;index++){
-		if (!isAlpha(inputString[index]){
+        if (!isAlpha(inputString[index])){
             //create new pointer and add line terminating character to array
 
             //Create new node
 
             //push node onto heap
-
-            
-
-        }
-	}
-
-
+        }        
+    }
 }
+
+
