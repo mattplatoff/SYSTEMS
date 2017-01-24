@@ -82,14 +82,22 @@ int main(int argc, char **argv)
     }
 	char* inputString = argv[1];
 	int len = strlen(inputString);
-	for (int index = 0; i< len;index++){
+    int tokenLength = 0; //will keep track of length of each token for mallocing
+	
+    for (int index = 0; index< len;index++){
         if (!isAlpha(inputString[index])){
+            if(tokenLength == 0) {continue;}
+
             //create new pointer and add line terminating character to array
 
             //Create new node
 
             //push node onto heap
-        }        
+
+            //set tokenLength to 0
+        }
+
+        else tokenLength++;        
     }
 }
 
