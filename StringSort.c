@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 {
     if(argc != 2)
     {
-        fprintf(stderr, "ERROR: Invalid numver of arguments.\nUsage: ./StringSort <Input String>\n");
+        fprintf(stderr, "ERROR: Invalid number of arguments.\nUsage: ./StringSort <Input String>\n");
         return 1;
     }
     LexHeap heap = buildHeap();
@@ -94,20 +94,20 @@ int main(int argc, char **argv)
     int tokenLength = 0; //will keep track of length of each token for mallocing
 	char* ptr;
 
-    for (int index = 0; index< len;index++)
+    for (int index = 0; index<= len;index++)
     {
-        if (!isalpha(inputString[index]))
+        if (!isalpha(inputString[index]) || index == len)
         {
            if(tokenLength == 0) {continue;}
             //allocate memory for token
-            ptr = malloc(sizeof(char)*tokenLength+1);
+            ptr = (char*)malloc(sizeof(char)*tokenLength+1);
             //copy vals from input string to token string and add null terminating byte.
             memcpy(ptr,&inputString[index-tokenLength],tokenLength);
             ptr[tokenLength]='\0';
+            //printf("%s\n", ptr);
             push(&heap,ptr);
             tokenLength=0;
         }
-
         else tokenLength++;        
     }
 
