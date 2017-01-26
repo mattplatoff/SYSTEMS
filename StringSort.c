@@ -94,13 +94,19 @@ int main(int argc, char **argv)
     int tokenLength = 0; //will keep track of length of each token for mallocing
 	char* ptr;
 
-    for (int index = 0; index<= len;index++)
+    int index;
+    for (index = 0; index<= len;index++)
     {
         if (!isalpha(inputString[index]) || index == len)
         {
            if(tokenLength == 0) {continue;}
             //allocate memory for token
             ptr = (char*)malloc(sizeof(char)*tokenLength+1);
+            if(ptr == NULL)
+            {
+                fprintf(stderr, "Malloc failed to allocate on line 104...exiting\n");
+                return 1;
+            }
             //copy vals from input string to token string and add null terminating byte.
             memcpy(ptr,&inputString[index-tokenLength],tokenLength);
             ptr[tokenLength]='\0';
@@ -115,7 +121,7 @@ int main(int argc, char **argv)
         char * ret = pop(&heap);
         printf("%s\n", ret);
     }
-
+    return 0;
 }
 
 
