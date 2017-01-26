@@ -33,7 +33,7 @@ void push(LexHeap *heap, char* word) {
         heap->root = realloc(heap->root, (heap->size + 1) * sizeof(HeapNode));
     } 
     else {
-        heap->root = malloc(sizeof(HeapNode)) ;
+        heap->root = (HeapNode*)malloc(sizeof(HeapNode)) ;
     }
     // initializing the node with value
     HeapNode node;
@@ -121,6 +121,7 @@ int main(int argc, char **argv)
         char * ret = pop(&heap);
         printf("%s\n", ret);
     }
+    free(ptr);
     return 0;
 }
 
