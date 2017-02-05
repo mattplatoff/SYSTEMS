@@ -93,6 +93,7 @@ int main(int argc, char **argv)
 	int len = strlen(inputString);
     int tokenLength = 0; //will keep track of length of each token for mallocing
 	char* ptr;
+    int isempty = 1;
 
     int index;
     for (index = 0; index<= len;index++)
@@ -113,14 +114,21 @@ int main(int argc, char **argv)
             //printf("%s\n", ptr);
             push(&heap,ptr);
             tokenLength=0;
-            free(ptr);
         }
-        else tokenLength++;        
+        else 
+        {
+            tokenLength++;
+            isempty = 0;
+        }        
     }
 
     while(heap.size>0){
         char * ret = pop(&heap);
         printf("%s\n", ret);
+    }
+    if(isempty == 0)
+    {
+        free(ptr);
     }
     return 0;
 }
