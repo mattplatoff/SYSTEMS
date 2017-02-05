@@ -113,6 +113,7 @@ int main(int argc, char **argv)
             //printf("%s\n", ptr);
             push(&heap,ptr);
             tokenLength=0;
+            free(ptr);
         }
         else tokenLength++;        
     }
@@ -121,7 +122,6 @@ int main(int argc, char **argv)
         char * ret = pop(&heap);
         printf("%s\n", ret);
     }
-    free(ptr);
     return 0;
 }
 
