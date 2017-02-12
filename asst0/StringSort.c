@@ -33,7 +33,7 @@ void push(LexHeap *heap, char* word) {
         heap->root = realloc(heap->root, (heap->size + 1) * sizeof(HeapNode));
     } 
     else {
-        heap->root = malloc(sizeof(HeapNode)) ;
+        heap->root = (HeapNode*)malloc(sizeof(HeapNode)) ;
     }
     // initializing the node with value
     HeapNode node;
@@ -94,14 +94,22 @@ int main(int argc, char **argv)
     //printf("length = %d\n",len );
     int tokenLength = 0; //will keep track of length of each token for mallocing
 	char* ptr;
+    int isempty = 1;
 
-    for (int index = 0; index<=len;index++)
+
+    int index;
+    for (index = 0; index<= len;index++)
     {
         if (!isalpha(inputString[index]))
         {
            if(tokenLength == 0) {continue;}
             //allocate memory for token
             ptr = (char*)malloc(sizeof(char)*tokenLength+1);
+            if(ptr == NULL)
+            {
+                fprintf(stderr, "Malloc failed to allocate on line 104...exiting\n");
+                return 1;
+            }
             //copy vals from input string to token string and add null terminating byte.
             memcpy(ptr,&inputString[index-tokenLength],tokenLength);
             ptr[tokenLength]='\0';
@@ -109,14 +117,22 @@ int main(int argc, char **argv)
             push(&heap,ptr);
             tokenLength=0;
         }
-        else tokenLength++;        
+        else 
+        {
+            tokenLength++;
+            isempty = 0;
+        }        
     }
 
     while(heap.size>0){
         char * ret = pop(&heap);
         printf("%s\n", ret);
     }
-
+    if(isempty == 0)
+    {
+        free(ptr);
+    }
+    return 0;
 }
 
 
