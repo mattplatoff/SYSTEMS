@@ -91,12 +91,13 @@ int main(int argc, char **argv)
     LexHeap heap = buildHeap();
 	char* inputString = argv[1];
 	int len = strlen(inputString);
+    //printf("length = %d\n",len );
     int tokenLength = 0; //will keep track of length of each token for mallocing
 	char* ptr;
 
-    for (int index = 0; index<= len;index++)
+    for (int index = 0; index<=len;index++)
     {
-        if (!isalpha(inputString[index]) || index == len)
+        if (!isalpha(inputString[index]))
         {
            if(tokenLength == 0) {continue;}
             //allocate memory for token
