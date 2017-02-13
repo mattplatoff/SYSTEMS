@@ -84,13 +84,43 @@ void* malloc(int size){
 					ptr=ptr->next;
 				}
 				else 
-					fprintf(stderr, "ERROR: OUT OF MEMORY, FREE ALLOCATED MEMORY");
+					fprintf(stderr, "ERROR: OUT OF MEMORY, FREE ALLOCATED MEMORY\n");
 			}
 		} 
 	}
 }
 
 void free(void* mem){
+
+	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
+	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
+	if(&mem > 5000)
+	{
+		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT IS OUT OF BOUNDS\n");
+		return;
+	}
+
+	//make pointer to first byte of metadata corresponding to memory to be freed
+	meta* ptr = (meta)(&mem - sizeof(meta));
+	
+	//print error if already free memory is attempting to be be freed
+	if(ptr->free)
+	{
+		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT HAS ALREADY BEEN FREED\n");
+		return;
+	}
+	else
+	{
+		ptr->free = 0;
+		/*maybe need to set the actual freed blocks of memory to '\0', but probably not neccessary because malloc 
+			just checks if the space is free in the metadata (except for initial block) (psuedo code for process below)*/
+		
+		//add size of meta struct to ptr
+
+		//loop through each byte of memory setting it to '\0'
+
+		//stop when next metadata block is reached (unsure how to check if current memory is a metadata block)
+	}
 
 }
 
