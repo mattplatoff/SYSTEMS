@@ -25,7 +25,7 @@ process for free:
 */
 typedef struct metadata{
  int size;
- meta* next;
+ struct metadata* next;
  char free;
  //0 if used, 1 if free
 } meta; 
