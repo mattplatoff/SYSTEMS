@@ -39,12 +39,12 @@ void* my_malloc(int size){
 		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR, MEM OUT OF BOUNDS\n") : size;
 		firstMeta.free = 0;
 		firstMeta.next = NULL;
-		
+		puts("test");
 		//store first metadata struct in address of first block in array
 		memcpy(&myblock[0],&firstMeta,sizeof(meta));
 
 		//get address of first free block after metadata and return that as void*
-		ret = (void*)(&myblock[sizeof(meta)]);
+		ret = (void*)(&myblock[0] + sizeof(meta));
 		return ret;
 
 	}
@@ -69,7 +69,7 @@ void* my_malloc(int size){
 			meta* currentMemSpaceEnd = ptr->next? ptr->next : (meta*)&myblock[MEM_SIZE];
 			
 			// if block requested fits inbetween currently allocated block and next block, make new metadata and return pointer to allocated block
-			if ((&ptr+ptr->size+sizeof(meta))-&(currentMemSpaceEnd)>(sizeof(meta)+size)){
+			if ((ptr+ptr->size+sizeof(meta))-(currentMemSpaceEnd)>(sizeof(meta)+size)){
 				//insert new pointer 
 				meta newMeta;
 				newMeta.size=size;
@@ -91,6 +91,7 @@ void* my_malloc(int size){
 			}
 		} 
 	}
+	return NULL;
 }
 
 void my_free(void* mem){
@@ -129,10 +130,14 @@ void my_free(void* mem){
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-myblock=malloc(sizeof(char)*5000)
-int index = 0;
-for(index = 0; index <5000; index++){
-	myblock[index]='\0';
-} 
+char* test = (char*)my_malloc(sizeof(char)*6);
+puts("test2\n");
+printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
+test = "hello";
+//test[5] = '\0';
+char* test2 = (char*)my_malloc(sizeof(char)*13);
+test2 = "Hello World!";
 
+printf("%s\n%s\n",test,test2);
+return 0;
 }
