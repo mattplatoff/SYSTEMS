@@ -23,15 +23,16 @@ process for free:
 
 
 */
-typedef struct metadata{
+typedef struct metadata meta;
+struct metadata{
  int size;
- struct metadata* next;
+ meta* next;
  char free;
  //0 if used, 1 if free
-} meta; 
+}; 
 
 
-void* malloc(int size){
+void* my_malloc(int size){
 	//on first malloc
 	void* ret;
 	if (myblock[0]=='\0'){
@@ -41,7 +42,7 @@ void* malloc(int size){
 		firstMeta.next = NULL;
 		
 		//store first metadata struct in address of first block in array
-		(meta*)(&myblock[0]) = firstMeta;
+		memcpy(myblock,&firstMeta,sizeof(meta));
 		//get address of first free block after metadata and return that as void*
 		ret = (void*)(&myblock[sizeof(meta)]);
 		return ret;
@@ -49,10 +50,10 @@ void* malloc(int size){
 	}
 	else {
 		//start with a pointer to first metadata
-		meta* ptr = (meta)&myblock[0];
+		meta* ptr = (meta*)&myblock[0];
 		//size of block being checked for storage
 		int blocksize = 0;
-		while(ptr!=null){
+		while(ptr!=NULL){
 			//consoladate adjecent free blocks of memory
 			if (ptr->free&&ptr->next&&ptr->next->free){
 				ptr->size+=ptr->next->size+sizeof(meta);
@@ -73,7 +74,8 @@ void* malloc(int size){
 				newMeta.free=0;
 				newMeta.next=ptr->next;
 				//place metadaa in array directly after the allocated block
-				(meta*)(&ptr+ptr->size+sizeof(meta)) = newMeta;
+				//(meta*)(&ptr+ptr->size+sizeof(meta)) = newMeta;
+				memcpy((ptr+ptr->size+sizeof(meta)),&newMeta,sizeof(meta));
 				ptr->next=&newMeta;
 				
 				//return pointer to first empty byte after metadata
@@ -90,18 +92,18 @@ void* malloc(int size){
 	}
 }
 
-void free(void* mem){
+void my_free(void* mem){
 
 	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
 	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
-	if(&mem > 5000)
+	if(&mem > &myblock[5000])
 	{
 		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT IS OUT OF BOUNDS\n");
 		return;
 	}
 
 	//make pointer to first byte of metadata corresponding to memory to be freed
-	meta* ptr = (meta)(&mem - sizeof(meta));
+	meta* ptr = (meta*)(&mem - sizeof(meta));
 	
 	//print error if already free memory is attempting to be be freed
 	if(ptr->free)
@@ -111,7 +113,7 @@ void free(void* mem){
 	}
 	else
 	{
-		ptr->free = 0;
+		ptr->free = 1;
 		/*maybe need to set the actual freed blocks of memory to '\0', but probably not neccessary because malloc 
 			just checks if the space is free in the metadata (except for initial block) (psuedo code for process below)*/
 		
@@ -126,10 +128,9 @@ void free(void* mem){
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-myblock=malloc(sizeof(char)*5000)
-int index = 0;
-for(index = 0; index <5000; index++){
-	myblock[index]='\0';
-} 
+// int index = 0;
+// for(index = 0; index <5000; index++){
+// 	myblock[index]='\0';
+// } 
 
 }
