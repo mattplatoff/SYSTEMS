@@ -139,13 +139,8 @@ void myfree(void* mem){
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-<<<<<<< HEAD
 char* test = (char*)malloc(sizeof(char)*6);
-=======
-
-char* test = (char*)my_malloc(sizeof(char)*6);
 puts("test2\n");
->>>>>>> b4a9c86ae3c34ed6dc36ede7164421c2853de399
 printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
 test = "hello";
 printf("%p\n",(void*)test);
