@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #define MEM_SIZE 5000
+#define malloc(x) mymalloc(x)
+#define free(x) myfree(x)
 
 static char myblock[5000];
 
@@ -30,8 +32,7 @@ typedef struct metadata{
  //0 if used, 1 if free
 } meta; 
 
-
-void* my_malloc(int size){
+void* mymalloc(int size){
 	//on first malloc
 	void* ret;
 	if (myblock[0]=='\0'){
@@ -39,7 +40,6 @@ void* my_malloc(int size){
 		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR, MEM OUT OF BOUNDS\n") : size;
 		firstMeta.free = 0;
 		firstMeta.next = NULL;
-		puts("test");
 		//store first metadata struct in address of first block in array
 		memcpy(&myblock[0],&firstMeta,sizeof(meta));
 
@@ -94,7 +94,7 @@ void* my_malloc(int size){
 	return NULL;
 }
 
-void my_free(void* mem){
+void myfree(void* mem){
 
 	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
 	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
@@ -125,17 +125,16 @@ void my_free(void* mem){
 
 		//stop when next metadata block is reached (unsure how to check if current memory is a metadata block)
 	}
-
+	
 }
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-char* test = (char*)my_malloc(sizeof(char)*6);
-puts("test2\n");
+char* test = (char*)malloc(sizeof(char)*6);
 printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
 test = "hello";
-//test[5] = '\0';
-char* test2 = (char*)my_malloc(sizeof(char)*13);
+printf("%p\n",(void*)test);
+char* test2 = (char*)malloc(sizeof(char)*13);
 test2 = "Hello World!";
 
 printf("%s\n%s\n",test,test2);
