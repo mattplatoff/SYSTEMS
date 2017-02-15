@@ -40,11 +40,16 @@ void* my_malloc(int size){
 		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR, MEM OUT OF BOUNDS\n") : size;
 		firstMeta.free = 0;
 		firstMeta.next = NULL;
-		
+		puts("test");
 		//store first metadata struct in address of first block in array
-		memcpy(myblock,&firstMeta,sizeof(meta));
+
+
+
+		memcpy(&myblock[0],&firstMeta,sizeof(meta));
+
+
 		//get address of first free block after metadata and return that as void*
-		ret = (void*)(&myblock[sizeof(meta)]);
+		ret = (void*)(&myblock[0] + sizeof(meta));
 		return ret;
 
 	}
@@ -52,7 +57,7 @@ void* my_malloc(int size){
 		//start with a pointer to first metadata
 		meta* ptr = (meta*)&myblock[0];
 		//size of block being checked for storage
-		int blocksize = 0;
+
 		while(ptr!=NULL){
 			//consoladate adjecent free blocks of memory
 			if (ptr->free&&ptr->next&&ptr->next->free){
@@ -62,24 +67,25 @@ void* my_malloc(int size){
 			//if block is already free, no need to create new metadata, just update current one and return pointer. 
 			if (ptr->free&&(ptr->size<=size+sizeof(meta))){
 				ptr->size=size;
-				return (void*)(&ptr+sizeof(meta));
+				return (void*)(ptr+sizeof(meta));
 				}
-			meta* currentMemSpaceEnd = ptr->next? ptr->next : &myblock[MEM_SIZE];
+			meta* currentMemSpaceEnd = ptr->next? ptr->next : (meta*)&myblock[MEM_SIZE];
 			
 			// if block requested fits inbetween currently allocated block and next block, make new metadata and return pointer to allocated block
-			if ((&ptr+ptr->size+sizeof(meta))-&(currentMemSpaceEnd)>(sizeof(meta)+size)){
+			if ((ptr+ptr->size+sizeof(meta))-(currentMemSpaceEnd)>(sizeof(meta)+size)){
 				//insert new pointer 
 				meta newMeta;
 				newMeta.size=size;
 				newMeta.free=0;
 				newMeta.next=ptr->next;
-				//place metadaa in array directly after the allocated block
-				//(meta*)(&ptr+ptr->size+sizeof(meta)) = newMeta;
-				memcpy((ptr+ptr->size+sizeof(meta)),&newMeta,sizeof(meta));
+
+				//place metadata in array directly after the allocated block
+				memcpy(ptr + ptr->size + sizeof(meta),&newMeta,sizeof(meta));
+
 				ptr->next=&newMeta;
 				
 				//return pointer to first empty byte after metadata
-				return (void*)(&ptr+ptr->size+(2*sizeof(meta)));
+				return (void*)(ptr+ptr->size+(2*sizeof(meta)));
 			}
 			else {
 				if (ptr->next){
@@ -90,20 +96,25 @@ void* my_malloc(int size){
 			}
 		} 
 	}
+	return NULL;
 }
 
 void my_free(void* mem){
 
 	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
 	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
-	if(&mem > &myblock[5000])
+//does this work @mohit? 
+	if((char*)mem > &myblock[5000])
+
 	{
 		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT IS OUT OF BOUNDS\n");
 		return;
 	}
 
 	//make pointer to first byte of metadata corresponding to memory to be freed
-	meta* ptr = (meta*)(&mem - sizeof(meta));
+
+
+	meta* ptr = (meta*)(mem - sizeof(meta));
 	
 	//print error if already free memory is attempting to be be freed
 	if(ptr->free)
@@ -128,9 +139,15 @@ void my_free(void* mem){
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-// int index = 0;
-// for(index = 0; index <5000; index++){
-// 	myblock[index]='\0';
-// } 
 
+char* test = (char*)my_malloc(sizeof(char)*6);
+puts("test2\n");
+printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
+test = "hello";
+//test[5] = '\0';
+char* test2 = (char*)my_malloc(sizeof(char)*13);
+test2 = "Hello World!";
+
+printf("%s\n%s\n",test,test2);
+return 0;
 }
