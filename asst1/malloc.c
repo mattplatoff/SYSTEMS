@@ -139,16 +139,16 @@ void myfree(void* mem){
 
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
-char* test = (char*)malloc(sizeof(char)*6);
+char* test = (char*)malloc(sizeof(char)*4);
 puts("test2\n");
 printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
-test = "hello";
+test[0] = 'h';
+test[1] = 'e';
+test[2] = 'l';
+test[3] = '\0';
 printf("%p\n",(void*)test);
-char* test2 = (char*)malloc(sizeof(char)*13);
-test2 = "Hello World!";
 
-free(&myblock[5000] + 1);
-
-printf("%s\n%s\n",test,test2);
+printf("%s\n",test);
+free(test);
 return 0;
 }
