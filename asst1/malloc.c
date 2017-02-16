@@ -111,9 +111,9 @@ void myfree(void* mem){
 		return;
 	}
 
+	//CHECK IF (MEM - SIZE OF META) ACTUALLY POINTS TO A STRUCT
+
 	//make pointer to first byte of metadata corresponding to memory to be freed
-
-
 	meta* ptr = (meta*)(mem - sizeof(meta));
 	
 	//print error if already free memory is attempting to be be freed
@@ -146,6 +146,8 @@ test = "hello";
 printf("%p\n",(void*)test);
 char* test2 = (char*)malloc(sizeof(char)*13);
 test2 = "Hello World!";
+
+free(&myblock[5000] + 1);
 
 printf("%s\n%s\n",test,test2);
 return 0;
