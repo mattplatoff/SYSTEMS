@@ -70,22 +70,25 @@ void* mymalloc(int size){
 				return (void*)(ptr+sizeof(meta));
 				}
 			meta* currentMemSpaceEnd = ptr->next? ptr->next : (meta*)&myblock[MEM_SIZE];
-			
+
+			int n = ((int)(ptr) - (int)&myblock[0]) + ptr->size + sizeof(meta);
+			printf("----%d",n);
 			// if block requested fits inbetween currently allocated block and next block, make new metadata and return pointer to allocated block
-			if ((ptr+ptr->size+sizeof(meta))-(currentMemSpaceEnd)>(sizeof(meta)+size)){
+			if ((void*)&myblock[n]-(void*)(currentMemSpaceEnd)>(sizeof(meta)+size)){
 				//insert new pointer 
 				meta newMeta;
 				newMeta.size=size;
 				newMeta.free=0;
 				newMeta.next=ptr->next;
+				printf(":::%p\n", (void*)(ptr + (size_t)ptr-> size));
 
 				//place metadata in array directly after the allocated block
-				memcpy(ptr + ptr->size + sizeof(meta),&newMeta,sizeof(meta));
+				memcpy(&myblock[n],&newMeta,sizeof(meta));
 
 				ptr->next=&newMeta;
 				
 				//return pointer to first empty byte after metadata
-				return (void*)(ptr+ptr->size+(2*sizeof(meta)));
+				return (void*)(&myblock[n+sizeof(meta)]);
 			}
 			else {
 				if (ptr->next){
@@ -146,7 +149,16 @@ test[0] = 'h';
 test[1] = 'e';
 test[2] = 'l';
 test[3] = '\0';
-printf("%p\n",(void*)test);
+printf("%p\n",(void*)&test[3]);
+
+char* test2 = (char*)malloc(sizeof(char)*4);
+printf("%p\t%p\n",(void*)test ,(void*)test2);
+
+/*int x;
+for(x = 0;x < 5000;x++)
+{
+	printf("%p\n",(void*)&myblock[x]);
+}*/
 
 printf("%s\n",test);
 free(test);
