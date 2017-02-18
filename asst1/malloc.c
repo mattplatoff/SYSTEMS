@@ -43,10 +43,7 @@ void* mymalloc(int size){
 		firstMeta.next = NULL;
 		//store first metadata struct in address of first block in array
 
-
-
 		memcpy(&myblock[0],&firstMeta,sizeof(meta));
-
 
 		//get address of first free block after metadata and return that as void*
 		ret = (void*)(&myblock[0] + sizeof(meta));
@@ -56,8 +53,8 @@ void* mymalloc(int size){
 	else {
 		//start with a pointer to first metadata
 		meta* ptr = (meta*)&myblock[0];
-		//size of block being checked for storage
 
+		int n;
 		while(ptr!=NULL){
 			//consoladate adjecent free blocks of memory
 			if (ptr->free&&ptr->next&&ptr->next->free){
@@ -67,12 +64,14 @@ void* mymalloc(int size){
 			//if block is already free, no need to create new metadata, just update current one and return pointer. 
 			if (ptr->free&&(ptr->size<=size+sizeof(meta))){
 				ptr->size=size;
-				return (void*)(ptr+sizeof(meta));
+				n = ((int)(ptr) - (int)&myblock[0]) + sizeof(meta);
+				return (void*)(&myblock[n]);
 				}
-			meta* currentMemSpaceEnd = ptr->next? ptr->next : (meta*)&myblock[MEM_SIZE];
 
-			int n = ((int)(ptr) - (int)&myblock[0]) + ptr->size + sizeof(meta);
-			printf("----%d",n);
+			meta* currentMemSpaceEnd = ptr->next != NULL ? ptr->next : (meta*)&myblock[MEM_SIZE];
+
+			n = ((int)(ptr) - (int)&myblock[0]) + ptr->size + sizeof(meta);
+
 			// if block requested fits inbetween currently allocated block and next block, make new metadata and return pointer to allocated block
 			if ((void*)&myblock[n]-(void*)(currentMemSpaceEnd)>(sizeof(meta)+size)){
 				//insert new pointer 
@@ -80,12 +79,11 @@ void* mymalloc(int size){
 				newMeta.size=size;
 				newMeta.free=0;
 				newMeta.next=ptr->next;
-				printf(":::%p\n", (void*)(ptr + (size_t)ptr-> size));
 
 				//place metadata in array directly after the allocated block
 				memcpy(&myblock[n],&newMeta,sizeof(meta));
 
-				ptr->next=&newMeta;
+				ptr->next=(meta*)&myblock[n];
 				
 				//return pointer to first empty byte after metadata
 				return (void*)(&myblock[n+sizeof(meta)]);
@@ -153,6 +151,14 @@ printf("%p\n",(void*)&test[3]);
 
 char* test2 = (char*)malloc(sizeof(char)*4);
 printf("%p\t%p\n",(void*)test ,(void*)test2);
+
+char* test3 = (char*)malloc(sizeof(char)*4);
+printf("%p\n",(void*)test3);
+
+free(test2);
+
+char* test4 = (char*)malloc(sizeof(char)*3);
+printf("%p\n",(void*)test4);
 
 /*int x;
 for(x = 0;x < 5000;x++)
