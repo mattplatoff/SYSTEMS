@@ -64,6 +64,7 @@ void* mymalloc(int size){
 			//if block is already free, no need to create new metadata, just update current one and return pointer. 
 			if (ptr->free&&(ptr->size<=size+sizeof(meta))){
 				ptr->size=size;
+				ptr->free = 0;
 				n = ((int)(ptr) - (int)&myblock[0]) + sizeof(meta);
 				return (void*)(&myblock[n]);
 				}
@@ -141,24 +142,23 @@ void myfree(void* mem){
 int main(int argc, char **argv){
 //allocate and zero out memory CHECK IF THIS MALLOC CALL CONFLICTS WITH THE ONE I WROTE WHEN CALLED
 char* test = (char*)malloc(sizeof(char)*4);
-puts("test2\n");
 printf("%p\t%p\t%d\n",(void*)&myblock[0],(void*)test,sizeof(meta));
 test[0] = 'h';
 test[1] = 'e';
 test[2] = 'l';
 test[3] = '\0';
 printf("%p\n",(void*)&test[3]);
-
+free(test);
 char* test2 = (char*)malloc(sizeof(char)*4);
 printf("%p\t%p\n",(void*)test ,(void*)test2);
 
 char* test3 = (char*)malloc(sizeof(char)*4);
 printf("%p\n",(void*)test3);
 
-free(test2);
+//free(test2);
 
 char* test4 = (char*)malloc(sizeof(char)*3);
-printf("%p\n",(void*)test4);
+printf("hhhh%p\n",(void*)test4);
 
 /*int x;
 for(x = 0;x < 5000;x++)
