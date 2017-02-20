@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #define MEM_SIZE 5000
-#define malloc(x) mymalloc(x)
-#define free(x) myfree(x)
+#define malloc(x) mymalloc(x, __FILE__,__LINE__)
+#define free(x) myfree(x,__FILE__,__LINE__)
 
 static char myblock[5000];
 
@@ -12,7 +12,6 @@ static char myblock[5000];
 process for malloc:
 	if block is first to be malloced:
 		mem requested > mem available ? err : allocate mem and return pointer to first block after metadata:
-
 	else:
 		get first meta data, check m1 size against m2 address and find how much empty space there is.
 			if the second block and its metadata fits in the empty space, place it there, update next pointers of previous meta data
@@ -33,12 +32,12 @@ struct metadata{
  //0 if used, 1 if free
 }; 
 
-void* mymalloc(int size){
+void* mymalloc(int size, char* file, int line){
 	//on first malloc
 	void* ret;
 	if (myblock[0]=='\0'){
 		meta firstMeta;
-		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR, MEM OUT OF BOUNDS\n") : size;
+		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR AT %s:%d -- MEM OUT OF BOUNDS\n",file,line) : size;
 		firstMeta.free = '\?';
 		firstMeta.next = NULL;
 		//store first metadata struct in address of first block in array
@@ -94,21 +93,21 @@ void* mymalloc(int size){
 					ptr=ptr->next;
 				}
 				else 
-					fprintf(stderr, "ERROR: OUT OF MEMORY, FREE ALLOCATED MEMORY\n");
+					fprintf(stderr, "ERROR AT %s:%d -- OUT OF MEMORY, FREE ALLOCATED MEMORY\n",file,line);
 			}
 		} 
 	}
 	return NULL;
 }
 
-void myfree(void* mem){
+void myfree(void* mem, char* file, int line){
 	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
 	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
 //does this work @mohit? 
 	if((char*)mem > &myblock[MEM_SIZE] || (char*)mem < &myblock[0])
 
 	{
-		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT HAS NOT BEEN ALLOCATED BY MALLOC\n");
+		fprintf(stderr, "ERROR AT %s:%d -- ATTEMPTING TO FREE MEMORY THAT HAS NOT BEEN ALLOCATED BY MALLOC\n",file,line);
 		return;
 	}
 
@@ -122,7 +121,7 @@ void myfree(void* mem){
 	}
 	else
 	{
-		fprintf(stderr, "ERROR: ATTEMPTING TO FREE MEMORY THAT IS NOT ALLOCATED\n");
+		fprintf(stderr, "ERROR AT %s:%d -- ATTEMPTING TO FREE MEMORY THAT IS NOT ALLOCATED\n",file,line);
 		return;
 	}
 	
@@ -137,7 +136,6 @@ char* test3 = (char*)malloc(sizeof(char)*4);
 printf("%p\n",(void*)test3);
 
 free(test2);
-char* test4 = (char*)malloc(sizeof(char)*4);
-printf("%p\n",(void*)test4);
+free(test2);
 return 0;
 }
