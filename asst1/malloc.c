@@ -33,7 +33,15 @@ void* mymalloc(int size, char* file, int line){
 	void* ret;
 	if (myblock[0]=='\0'){
 		meta firstMeta;
-		firstMeta.size = size + sizeof(meta) >= MEM_SIZE ? fprintf(stderr,"ERROR AT %s:%d -- MEM OUT OF BOUNDS\n",file,line) : size;
+		if(size + sizeof(meta) >= MEM_SIZE)
+		{
+			fprintf(stderr,"ERROR AT %s:%d -- MEM OUT OF BOUNDS\n",file,line);
+			return NULL;
+		}
+		else
+		{
+			firstMeta.size = size;
+		}
 		firstMeta.free = '\?';
 		firstMeta.next = NULL;
 		//store first metadata struct in address of first block in array
@@ -100,6 +108,11 @@ void myfree(void* mem, char* file, int line){
 	//print error if user is attempting to free a block of memory that is outside the bounds of the simulated "memory"
 	//unsure if the address of mem will actually be withing the range of 0-5000 or if it will have a legitimate address according to actual memory management
 //does this work @mohit? 
+	if(mem == NULL)
+	{
+		fprintf(stderr, "ERROR AT %s:%d -- POINTER IS NULL\n",file,line);
+		return;
+	}
 	if((char*)mem > &myblock[MEM_SIZE] || (char*)mem < &myblock[0])
 
 	{
@@ -124,14 +137,8 @@ void myfree(void* mem, char* file, int line){
 }
 
 int main(int argc, char **argv){
-char* test = (char*)malloc(sizeof(char)*4);
-printf("%p\n",(void*)test);
-char* test2 = (char*)malloc(sizeof(char)*4);
-printf("%p\n",(void*)test2);
-char* test3 = (char*)malloc(sizeof(char)*4);
-printf("%p\n",(void*)test3);
+char* test = (char*)malloc(sizeof(char)*4988);
 
-free(test2);
-free(test2);
+free(test);
 return 0;
 }
