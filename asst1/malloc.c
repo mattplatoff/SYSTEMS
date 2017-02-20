@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#define MEM_SIZE 5000
-#define malloc(x) mymalloc(x, __FILE__,__LINE__)
-#define free(x) myfree(x,__FILE__,__LINE__)
+#include "malloc.h"
 
 static char myblock[5000];
 
@@ -21,8 +19,6 @@ process for malloc:
 
 process for free:
 	TBD
-
-
 */
 typedef struct metadata meta;
 struct metadata{
