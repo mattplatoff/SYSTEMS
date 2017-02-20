@@ -57,12 +57,12 @@ void* mymalloc(int size){
 		long n;
 		while(ptr!=NULL){
 			//consoladate adjecent free blocks of memory
-			if (ptr->free&&ptr->next&&ptr->next->free){
+			if ((ptr->free != '\?')&&ptr->next&&(ptr->next->free != '\?')){
 				ptr->size+=ptr->next->size+sizeof(meta);
 				ptr->next=ptr->next->next;
 			}
 			//if block is already free, no need to create new metadata, just update current one and return pointer. 
-			if (ptr->free&&(ptr->size<=size+sizeof(meta))){
+			if ((ptr->free != '\?')&&(ptr->size<=size+sizeof(meta))){
 				ptr->size=size;
 				ptr->free = '\?';
 				n = ((long)(ptr) - (long)&myblock[0]) + sizeof(meta);
@@ -129,11 +129,15 @@ void myfree(void* mem){
 }
 
 int main(int argc, char **argv){
-char* test = (char*)malloc(sizeof(char)*100);
-for (int i = 0; i < 100; i++)
-{
-	test[i] = '\?';
-}
-free(test+1);
+char* test = (char*)malloc(sizeof(char)*4);
+printf("%p\n",(void*)test);
+char* test2 = (char*)malloc(sizeof(char)*4);
+printf("%p\n",(void*)test2);
+char* test3 = (char*)malloc(sizeof(char)*4);
+printf("%p\n",(void*)test3);
+
+free(test2);
+char* test4 = (char*)malloc(sizeof(char)*4);
+printf("%p\n",(void*)test4);
 return 0;
 }
