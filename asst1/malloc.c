@@ -115,7 +115,7 @@ void myfree(void* mem, char* file, int line){
 		fprintf(stderr, "ERROR AT %s:%d -- POINTER IS NULL\n",file,line);
 		return;
 	}
-	if((char*)mem > &myblock[MEM_SIZE] || (char*)mem < &myblock[0])
+	if(mem > (void*)&myblock[MEM_SIZE] || mem < (void*)&myblock[0])
 
 	{
 		fprintf(stderr, "ERROR AT %s:%d -- ATTEMPTING TO FREE MEMORY THAT HAS NOT BEEN ALLOCATED BY MALLOC\n",file,line);
@@ -141,11 +141,11 @@ void myfree(void* mem, char* file, int line){
 int main(int argc, char **argv){
 char* test = (char*)malloc(sizeof(char)*4);
 printf("%p\n",test);
-char* test2 = (char*)malloc(sizeof(char)*4);
+char* test2 = (char*)malloc(sizeof(char)*4900);
 printf("%p\n",test2);
 char* test3 = (char*)malloc(sizeof(char)*200);
 printf("%p\n",test3);
 
-//free(test);
+free(&myblock[5001]);
 return 0;
 }
