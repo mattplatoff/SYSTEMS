@@ -28,7 +28,7 @@ struct metadata{
  //0 if used, 1 if free
 }; 
 
-void* mymalloc(int size, char* file, int line){
+void* mymalloc(size_t size, char* file, int line){
 	//on first malloc
 	void* ret;
 	if (myblock[0]=='\0'){
