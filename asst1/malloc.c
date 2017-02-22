@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "malloc.h"
 
-static char myblock[5000];
+static char myblock[MEM_SIZE];
 
 /*
 process for malloc:
@@ -20,13 +20,8 @@ process for malloc:
 process for free:
 	TBD
 */
-typedef struct metadata meta;
-struct metadata{
- char free;
- int size;
- meta* next;
- //0 if used, 1 if free
-}; 
+
+//@MATT INCASE YOU DONT REALIZE, I CHANGED THE MEM_SIZE(IN THE HEADER FILE) TO 25000 FOR MEMGRIND
 
 void* mymalloc(size_t size, char* file, int line){
 	//on first malloc
