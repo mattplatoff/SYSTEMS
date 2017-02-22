@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "malloc.h"
+#include "mymalloc.h"
 
 static char myblock[MEM_SIZE];
 
@@ -133,14 +133,28 @@ void myfree(void* mem, char* file, int line){
 	
 }
 
-int main(int argc, char **argv){
-char* test = (char*)malloc(sizeof(char)*4);
-printf("%p\n",test);
-char* test2 = (char*)malloc(sizeof(char)*4900);
-printf("%p\n",test2);
-char* test3 = (char*)malloc(sizeof(char)*200);
-printf("%p\n",test3);
 
-free(&myblock[5001]);
-return 0;
+int main(int argc, char **argv)
+{
+	int x;
+	char* a[1000];
+	int i= 0;
+	int j;
+	for(; i < 2; i++)
+	{
+		puts("--------------------\n");
+	for(x = 0; x < 1000; x++)
+	{
+		a[x] = (char*)malloc(1);
+		printf("%p\n",a[x]);
+	}
+	for(j = 0; j < 1000 && a[--x] != NULL; j++)
+	{			
+		free(a[j]);
+	}
+	}
+			printf("%d\n",i);
+	return 0;
 }
+
+

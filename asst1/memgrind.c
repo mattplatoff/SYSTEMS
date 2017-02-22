@@ -3,8 +3,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include "malloc.h"
-#include "malloc.c"
+#include <sys/time.h>
+#include "mymalloc.h"
+#include "mymalloc.c"
 
 /*TO-DO:
 - test A-D
@@ -17,19 +18,28 @@
 
 int testA()
 {
-	char* arr[1000];
-	int x;
-	for(x = 0; x < 1000; x++)
+	struct timeval start, end;
+	long totalTime = 0;
+	int i;
+	for(i = 0; i < 100; i++)
 	{
-		arr[x] = (char*)malloc(1);
+		gettimeofday(&start,NULL);
+		char* arr[1000];
+		int x;
+		for(x = 0; x < 1000; x++)
+		{
+			arr[x] = (char*)malloc(1);
+		}
+
+		for(x = 0; x < 1000; x++)
+		{
+			free(arr[x]);
+		}
+		gettimeofday(&end,NULL);
+		totalTime += (end.tv_sec - start.tv_sec)*1000000L+ (end.tv_usec - start.tv_usec);
 	}
 
-	for(x = 0; x < 1000; x++)
-	{
-		free(arr[x]);
-	}
-
-	return 0;
+	return totalTime/100;
 }
 
 int testB()
@@ -112,4 +122,10 @@ int testD()
 	}
 
 	return 0;	
+}
+
+int main()
+{
+	//printf("%d\n",MEM_SIZE);
+	printf("%d\n",testA());
 }
