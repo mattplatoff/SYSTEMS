@@ -60,7 +60,7 @@ void* mymalloc(size_t size, char* file, int line){
 				ptr->next=ptr->next->next;
 			}
 			//if block is already free, no need to create new metadata, just update current one and return pointer. 
-			if ((ptr->free != '\?')&&(ptr->size<=size+sizeof(meta))){
+			if ((ptr->free != '\?')&&(ptr->size>=size)){
 				ptr->size=size;
 				ptr->free = '\?';
 				n = ((long)(ptr) - (long)&myblock[0]) + sizeof(meta);
@@ -133,28 +133,25 @@ void myfree(void* mem, char* file, int line){
 	
 }
 
-
+/*
 int main(int argc, char **argv)
 {
-	int x;
-	char* a[1000];
-	int i= 0;
-	int j;
-	for(; i < 2; i++)
+	int i;
+	for(i = 0; i < 100; i++)
 	{
-		puts("--------------------\n");
-	for(x = 0; x < 1000; x++)
-	{
-		a[x] = (char*)malloc(1);
-		printf("%p\n",a[x]);
+		char* arr[1000];
+		int x;
+		for(x = 0; x < 1000; x++)
+		{
+			arr[x] = (char*)malloc(1);
+		}
+
+		for(x = 0; x < 1000; x++)
+		{
+			free(arr[x]);
+		}
 	}
-	for(j = 0; j < 1000 && a[--x] != NULL; j++)
-	{			
-		free(a[j]);
-	}
-	}
-			printf("%d\n",i);
 	return 0;
 }
-
+*/
 
