@@ -8,16 +8,12 @@
 #include "mymalloc.c"
 
 /*TO-DO:
-- test A-D
-- do timing for all test cases
-- do each test case 100 times
-- calculate average time for each one over sample of 100 times
-- handle error/otherwise special cases in A-D
 - make two original test cases
 */
 
 int testA()
 {
+	
 	struct timeval start, end;
 	int totalTime = 0;
 	int i;
