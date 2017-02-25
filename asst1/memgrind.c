@@ -151,8 +151,8 @@ int testE()
 {
 	struct timeval start, end;
 	int totalTime = 0;
-	int i;
-	for(i = 0;i<100;i++)
+	int x;
+	for(x = 0;x<100;x++)
 	{
 		gettimeofday(&start, NULL);
 		char* arr[MEM_SIZE/(2 + sizeof(meta))];
