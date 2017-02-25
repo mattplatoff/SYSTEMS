@@ -13,7 +13,6 @@
 
 int testA()
 {
-	
 	struct timeval start, end;
 	int totalTime = 0;
 	int i;
@@ -75,11 +74,14 @@ int testC()
 		while(mcount < 1000)
 		{
 			int r = rand() % 2;
-			if(r == 0)
+			if(r == 0 && arr[currIndex] != NULL)
 			{
 				arr[currIndex] = (char*)malloc(1);
-				currIndex++;
-				mcount++;
+				if(arr[currIndex] != NULL)
+				{
+					currIndex++;
+					mcount++;
+				}
 			}
 			else if(r == 1 && currIndex > 0)
 			{
