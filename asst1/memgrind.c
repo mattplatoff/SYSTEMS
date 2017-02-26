@@ -186,6 +186,27 @@ int testE()
 	return totalTime/100;
 }
 
+int testF(){
+	struct timeval start, end;
+	int totalTime = 0;
+	int x;
+	char* arr[MEM_SIZE/(2 + sizeof(meta))];
+	gettimeofday(&start, NULL);
+	for (x=0;x<1000;x++){
+		arr[x++]=malloc(1);
+		arr[x++]=malloc(1);
+		arr[x]=malloc(1);
+		free(arr[x-1]);
+	}
+	
+
+	gettimeofday(&end, NULL);
+	totalTime += ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
+	
+
+	return totalTime;
+}
+
 int main()
 {
 	printf("Test A's average run time was: %d microseconds.\n",testA());
@@ -193,6 +214,7 @@ int main()
 	printf("Test C's average run time was: %d microseconds.\n",testC());
 	printf("Test D's average run time was: %d microseconds.\n",testD());
 	printf("Test E's average run time was: %d microseconds.\n",testE());
+	printf("Test F's average run time was: %d microseconds.\n",testF());
 
 	return 0;
 }
