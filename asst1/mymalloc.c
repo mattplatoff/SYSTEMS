@@ -72,7 +72,7 @@ void* mymalloc(size_t size, char* file, int line){
 			n = ((long)(ptr) - (long)&myblock[0]) + ptr->size + sizeof(meta);
 
 			// if block requested fits inbetween currently allocated block and next block, make new metadata and return pointer to allocated block
-			if ((void*)(currentMemSpaceEnd)-(void*)(&myblock[n])>(sizeof(meta)+size)){
+			if ((void*)(currentMemSpaceEnd)-(void*)(&myblock[n])>=(sizeof(meta)+size)){
 				//insert new pointer 
 				meta newMeta;
 				newMeta.size=size;
@@ -136,22 +136,21 @@ void myfree(void* mem, char* file, int line){
 /*
 int main(int argc, char **argv)
 {
-	int i;
-	for(i = 0; i < 100; i++)
-	{
-		char* arr[1000];
-		int x;
-		for(x = 0; x < 1000; x++)
-		{
-			arr[x] = (char*)malloc(1);
-		}
+	char* test = (char*)malloc(500);
+	printf("%p\n",test);
+	char* test2 = (char*)malloc(500);
+	printf("%p\n",test2);
+	char* test3 = (char*)malloc(500);
+	printf("%p\n",test3);
+	char* test4 = (char*)malloc(500);
+	printf("%p\n",test4);
+	free(test3);
+	free(test2);
+	char* test5 = (char*)malloc(500);
+	printf("%p\n",test5);
+	char* test6 = (char*)malloc(500);
+	printf("%p\n",test6);	
 
-		for(x = 0; x < 1000; x++)
-		{
-			free(arr[x]);
-		}
-	}
 	return 0;
 }
 */
-
