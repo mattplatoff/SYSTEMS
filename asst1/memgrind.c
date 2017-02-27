@@ -207,14 +207,19 @@ int testF(){
 	return totalTime;
 }
 
-int main()
+int main(int argc, char**argv)
 {
+	if(argc != 1)
+	{
+		fprintf(stderr, "ERROR: INVALID NUMBER OF ARGUMENTS\n");
+		return 1;
+	}
 	printf("Test A's average run time was: %d microseconds.\n",testA());
 	printf("Test B's average run time was: %d microseconds.\n",testB());
 	printf("Test C's average run time was: %d microseconds.\n",testC());
 	printf("Test D's average run time was: %d microseconds.\n",testD());
 	printf("Test E's average run time was: %d microseconds.\n",testE());
-	printf("Test F's average run time was: %d microseconds.\n",testF());
+	//printf("Test F's average run time was: %d microseconds.\n",testF());
 
 	return 0;
 }
