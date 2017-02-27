@@ -198,6 +198,11 @@ int testF(){
 		free(arr[x-1]);
 	}
 
+	while(arr[x] != NULL)
+	{
+		free(arr[x]);
+	}
+
 	gettimeofday(&end, NULL);
 	totalTime += ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
 	
