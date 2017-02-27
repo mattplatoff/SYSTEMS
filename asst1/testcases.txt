@@ -1,0 +1,23 @@
+Mohit Mori
+Matt Platoff
+Assignment1: mymalloc
+
+testplan
+
+Test E:
+	Our Test E intially mallocs 2 bytes 1000 times. Afterwards, it free every other address that was malloced, leaving (2 + sizeof(meta)) gaps between every
+2 byte memory allocation. Test E then mallocs 1 byte blocks in all of the gaps in the simulated memory that was created by the previous freeing. Finally,
+Test E frees up every address that was allocated.
+	
+	Test E was included because it effectively tests mallocing when the memory is fragmented, instead of contiguous. Also, it tests freeing memory that is not
+adjacent. It shows how when memory is freed, as long as the new data fits in that spot, it will be malloced to that address, if not it will search for a suitable
+opening in memory.
+
+
+Test F:
+	Our Test F mallocs 3 seperate blocks of 1 byte each, and then frees the second block of each group of three. This is repeated 1000 times.
+
+	Test F was included because it further tests situation in which memory is not contiguous, just like Test F. One of the main reasons this test case was
+included was because one of the biggest challenges we faced during implementing malloc was handling the situations in which the freeing of memory created gaps in the
+memory that was allocated. Test F tests filling gaps in memory that are exactly the size requested by the user of malloc + the size of our metadata struct.
+
