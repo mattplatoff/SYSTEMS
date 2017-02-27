@@ -158,11 +158,10 @@ int testE()
 		char* arr[MEM_SIZE/(2 + sizeof(meta))];
 		int i = 0;
 		int j;
-		do
+		for(; i < 1000; i++)
 		{
-			arr[i] = malloc(2);
-			i++;
-		}while(arr[i] != NULL);
+			arr[i] = (char*)malloc(2);
+		}
 
 		for(j = 0; j < i; j+= 2)
 		{
@@ -171,7 +170,7 @@ int testE()
 
 		for(j = 0; j < i; j+= 2)
 		{
-			arr[j] = malloc(1);
+			arr[j] = (char*)malloc(1);
 		}
 
 		for(j = 0; j < i; j++)
@@ -193,12 +192,11 @@ int testF(){
 	char* arr[MEM_SIZE/(2 + sizeof(meta))];
 	gettimeofday(&start, NULL);
 	for (x=0;x<1000;x++){
-		arr[x++]=malloc(1);
-		arr[x++]=malloc(1);
-		arr[x]=malloc(1);
+		arr[x++]=(char*)malloc(1);
+		arr[x++]=(char*)malloc(1);
+		arr[x]=(char*)malloc(1);
 		free(arr[x-1]);
 	}
-	
 
 	gettimeofday(&end, NULL);
 	totalTime += ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec));
@@ -219,7 +217,7 @@ int main(int argc, char**argv)
 	printf("Test C's average run time was: %d microseconds.\n",testC());
 	printf("Test D's average run time was: %d microseconds.\n",testD());
 	printf("Test E's average run time was: %d microseconds.\n",testE());
-	//printf("Test F's average run time was: %d microseconds.\n",testF());
+	printf("Test F's average run time was: %d microseconds.\n",testF());
 
 	return 0;
 }

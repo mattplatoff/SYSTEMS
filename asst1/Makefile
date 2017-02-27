@@ -7,4 +7,4 @@ memgrind: memgrind.c mymalloc.c mymalloc.h
 	$(CC) $(CCFLAGS) -g -o memgrind memgrind.c
 
 clean:
-	rm mymalloc.o memgrind		
+	rm memgrind		
