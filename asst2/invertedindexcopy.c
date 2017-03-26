@@ -54,13 +54,13 @@ void tokenize(int fd, char* fname)
 	return;
 }
 
-void indexDir(char* name)
+void indexDir(char name[4096])
 {
 	struct dirent * currObj = NULL;
 	DIR* directory = opendir(name);
 	currObj = readdir(directory);
 	//chdir(name);
-
+	printf("%s\n",name);
 	while(currObj != NULL )
 	{
 		if (!strcmp(".", currObj->d_name) || !strcmp("..", currObj->d_name))
@@ -73,7 +73,7 @@ void indexDir(char* name)
 			//currObj is a file
 			printf("\tfilename: %s\n",currObj->d_name);
 			char* temp = (char*)malloc(strlen(path) + strlen(currObj->d_name) + 2);
-			strcpy(temp,path);
+			strcpy(temp,name);
 			strcat(temp,"/");
 			strcat(temp,currObj->d_name);
 			printf("%s\n",temp);		
@@ -85,9 +85,12 @@ void indexDir(char* name)
 		else if(currObj->d_type == DT_DIR)
 		{	
 			printf("\tdirname: %s\n",currObj->d_name);
-			strcat(path,"/");
-			strcat(path,currObj->d_name);
-			indexDir(path);
+			char* temp = (char*)malloc(strlen(path) + strlen(currObj->d_name) + 2);
+			strcpy(temp,name);
+			strcat(temp,"/");
+			strcat(temp,currObj->d_name);
+			indexDir(temp);
+			free(temp);
 		}
 		else
 		{
