@@ -156,7 +156,7 @@ void indexDir(char name[4096], Index* index)
 	printf("%s\n",name);
 	while(currObj != NULL )
 	{
-		if (!strcmp(".", currObj->d_name) || !strcmp("..", currObj->d_name))
+		if (currObj->d_name[0]=='.')
 		{
 			currObj = readdir(directory);
 			continue;
