@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+char path[4096];
 
 typedef struct FileEntry{
 	char* fileName;
@@ -99,8 +100,6 @@ void addIndexEntry(Index* toAdd, char* token, char* fname){
 
 
 
-
-
 int isFile(const char* path)
 {
     struct stat path_stat;
@@ -145,13 +144,16 @@ void tokenize(int fd, char* fname, Index* index)
 	return;
 }
 
-void indexDir(char* name, Index* index)
+
+
+void indexDir(char name[4096], Index* index)
+
 {
 	struct dirent * currObj = NULL;
 	DIR* directory = opendir(name);
 	currObj = readdir(directory);
-	chdir(name);
-
+	//chdir(name);
+	printf("%s\n",name);
 	while(currObj != NULL )
 	{
 		if (!strcmp(".", currObj->d_name) || !strcmp("..", currObj->d_name))
@@ -163,14 +165,27 @@ void indexDir(char* name, Index* index)
 		{
 			//currObj is a file
 			printf("\tfilename: %s\n",currObj->d_name);
-			int fd = open(currObj->d_name,O_RDONLY);
-			tokenize(fd, currObj->d_name,index);
+
+			char* temp = (char*)malloc(strlen(path) + strlen(currObj->d_name) + 2);
+			strcpy(temp,name);
+			strcat(temp,"/");
+			strcat(temp,currObj->d_name);
+			printf("%s\n",temp);		
+			int fd = open(temp,O_RDONLY);
+			tokenize(fd, currObj->d_name, index);
+			free(temp);
 			close(fd);
 		}
 		else if(currObj->d_type == DT_DIR)
 		{	
 			printf("\tdirname: %s\n",currObj->d_name);
-			indexDir(currObj->d_name,index);
+
+			char* temp = (char*)malloc(strlen(path) + strlen(currObj->d_name) + 2);
+			strcpy(temp,name);
+			strcat(temp,"/");
+			strcat(temp,currObj->d_name);
+			indexDir(temp,index);
+			free(temp);
 		}
 		else
 		{
@@ -205,7 +220,10 @@ int main(int argc, char** argv)
 	//if 2nd argument is a directory(will handle recursive directory traversal after program is working with a single file)
 	else
 	{
-		indexDir(argv[2],i);
+
+		strcpy(path,"./");
+		strcat(path,argv[2]);
+		indexDir(path, i);
 	}
 
 	return 0;
