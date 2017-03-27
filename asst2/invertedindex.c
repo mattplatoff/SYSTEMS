@@ -43,6 +43,15 @@ void iterate(FILE* fp)
 	}
 }
 
+void toLowerCase(char* token)
+{
+	int i;
+	for(i=0;i<strlen(token);i++)
+	{
+		token[i] = tolower(token[i]);
+	}
+}
+
 fileNode* buildFileNode(char* fileName)
 {
 	fileNode* newNode = (fileNode*)malloc(sizeof(fileNode));
@@ -198,6 +207,7 @@ void tokenize(int fd, char* fname)
 		if(token != NULL)
 		{
 			token[i] = '\0';
+			toLowerCase(token);
 			addEntry(token,fname);
 			token = NULL;
 			i = 0;
