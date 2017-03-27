@@ -90,7 +90,7 @@ void insertWordNode(char* token, char* fileName)
 	prev->next = buildWordNode(token,fileName);
 }
 
-void insertFileNode(fileNode* head, char* fileName)
+fileNode* insertFileNode(fileNode* head, char* fileName)
 {
 	fileNode* prev = head;
 	fileNode* ptr = head;
@@ -110,14 +110,14 @@ void insertFileNode(fileNode* head, char* fileName)
 				prev->next = buildFileNode(fileName);
 				prev->next->next = ptr;
 			}
-			return;
+			return head;
 		}
 		prev = ptr;
 		ptr = ptr->next;
 	}
 
 	prev->next = buildFileNode(fileName);	
-
+	return head;
 }
 
 void addEntry(char* token, char* fileName)
@@ -146,7 +146,7 @@ void addEntry(char* token, char* fileName)
 			}
 
 			if(ptr2 != NULL) ptr2->count++;
-			else insertFileNode(ptr->fHead,fileName);
+			else ptr->fHead = insertFileNode(ptr->fHead,fileName);
 		}
 		else
 		{
@@ -242,6 +242,7 @@ void indexDir(char name[4096])
 			indexDir(temp);
 			free(temp);
 		}
+		if(wHead != NULL ) if(wHead -> fHead -> next != NULL) printf("%s\n",wHead->fHead->next->fileName);
 		currObj = readdir(directory);
 	}
 	return;	
