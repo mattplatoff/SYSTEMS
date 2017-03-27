@@ -7,19 +7,151 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 
-#define PATH_MAX 4096 
-
-
-typedef struct fileTokenCount{
+typedef struct fileNode
+{
 	char* fileName;
 	int count;
-} fileTokenCount;
+	struct fileNode* next;
+} fileNode;
 
-typedef struct indexMap{
+typedef struct wordNode
+{
 	char* token;
-	fileTokenCount files[10];
-} indexMap;
+	fileNode* fHead;
+	struct wordNode* next;
+} wordNode;
+
+static wordNode* wHead = NULL;
+
+void iterate()
+{
+	wordNode* ptr = wHead;
+	while(ptr != NULL)
+	{
+		printf("%s\n", ptr->token);
+		fileNode* ptr2 = ptr->fHead;
+		while(ptr2 != NULL)
+		{
+			printf("\t%s: %d\n",ptr2->fileName,ptr2->count);
+			ptr2 = ptr2->next;
+		}
+		ptr = ptr->next;
+	}
+}
+
+fileNode* buildFileNode(char* fileName)
+{
+	fileNode* newNode = (fileNode*)malloc(sizeof(fileNode));
+	newNode->fileName = fileName;
+	newNode->count = 1;
+	newNode->next = NULL;
+	return newNode;
+}
+
+wordNode* buildWordNode(char* token, char* fileName)
+{
+	wordNode* newNode = (wordNode*)malloc(sizeof(wordNode));
+	newNode->token = token;
+	newNode->fHead = buildFileNode(fileName);
+	newNode->next = NULL;
+	return newNode;
+}
+
+void insertWordNode(char* token, char* fileName)
+{
+	wordNode* prev = wHead;
+	wordNode* ptr = wHead;
+	while(ptr != NULL)
+	{
+
+		if(strcmp(ptr->token,token) > 0)
+		{
+			if(ptr == wHead)
+			{
+				wordNode* temp = wHead;
+				wHead = buildWordNode(token, fileName);
+				wHead->next = temp;
+			}
+			else
+			{
+				prev->next = buildWordNode(token,fileName);
+				prev->next->next = ptr;
+			}
+			return;
+		}
+		prev = ptr;
+		ptr = ptr->next;
+	}
+
+	prev->next = buildWordNode(token,fileName);
+}
+
+void insertFileNode(fileNode* head, char* fileName)
+{
+	fileNode* prev = head;
+	fileNode* ptr = head;
+	while(ptr != NULL)
+	{
+		if(strcmp(ptr->fileName,fileName) > 0)
+		{
+			if(ptr == head)
+			{
+				fileNode* temp = head;
+				head = buildFileNode(fileName);
+				head->next = temp;
+			}
+			else
+			{
+				prev->next = buildFileNode(fileName);
+				prev->next->next = ptr;
+			}
+			return;
+		}
+		prev = ptr;
+		ptr = ptr->next;
+	}
+
+	prev->next = buildFileNode(fileName);	
+
+}
+
+void addEntry(char* token, char* fileName)
+{
+	if(wHead == NULL)
+	{
+		wHead = buildWordNode(token, fileName);
+	}
+	else
+	{
+		wordNode* ptr = wHead;
+		while(ptr != NULL)
+		{
+			if(strcmp(ptr->token,token)==0) break;	
+			ptr = ptr->next;
+		}
+		
+		if(ptr != NULL)
+		{
+			fileNode* ptr2 = ptr->fHead;	
+			while(ptr2 != NULL)
+			{
+				//printf("%s\n",ptr2->next->fileName);
+				if(strcmp(ptr2->fileName,fileName)==0) break;	
+				ptr2 = ptr2->next;				
+			}
+
+			if(ptr2 != NULL) ptr2->count++;
+			else insertFileNode(ptr->fHead,fileName);
+		}
+		else
+		{
+			insertWordNode(token, fileName);
+		}
+	}
+	return;
+}
 
 int isFile(const char* path)
 {
@@ -35,14 +167,14 @@ int isDir(const char* path)
     return S_ISDIR(path_stat.st_mode);
 }
 
-void tokenize(int fd)
+void tokenize(int fd, char* fname)
 {
 	char* token = NULL;
 	int i = 0;
 	char buffer[1];
 	while(read(fd,buffer,1) != 0)
 	{
-		while(isalnum(buffer[0]))
+		while(isalnum(buffer[0]) && !(token == NULL && isdigit(buffer[0])))
 		{
 			if(token == NULL)
 			{
@@ -51,139 +183,104 @@ void tokenize(int fd)
 			}
 			else
 			{
-				char* temp = (char*)realloc(token,i+1);
+				char* temp = (char*)realloc(token,i+2);
 				token = temp;
 				token[i] = buffer[0];
 			}
+			
 			i++;
-			read(fd,buffer,1);
+			if(read(fd,buffer,1) == 0) break;
 		}
-		token[i] = '\0';
-		printf("%s\n", token);
-		token = NULL;
-		i = 0;
-	}
 
+		if(token != NULL)
+		{
+			token[i] = '\0';
+			printf("%s\n", token);
+			addEntry(token,fname);
+			token = NULL;
+			i = 0;
+		}
+	}
+	return;
 }
 
- void recursiveIndex(const char* dirName, DIR* dstream, char * path){
-	//Need to find way to maintain absoulte path as we go into child directories , 
-	//currently program has issues because it searches for target in current working directory insted of the child directory
+void indexDir(char name[4096])
+{
+	struct dirent * currObj = NULL;
+	DIR* directory = opendir(name);
+	currObj = readdir(directory);
+	//chdir(name);
+	printf("%s\n",name);
+	while(currObj != NULL )
+	{
+		char* fname = (char*)malloc(strlen(currObj->d_name)+1);
+		strcpy(fname,currObj->d_name);
 
-	printf("recursive index called\n");
-	DIR* directory;
-	
-	
-	if (dstream==NULL){
-		printf("dir stream was null\n");
-	directory = opendir(dirName);
-	if (directory==NULL){
-		printf("directory was empty\n");
-		return;
-	}}
-	else{
-		directory = dstream;
+		if (!strcmp(".", currObj->d_name) || !strcmp("..", currObj->d_name))
+		{
+			currObj = readdir(directory);
+			continue;
+		}
+		if(currObj->d_type == DT_REG)
+		{
+			//currObj is a file
+			printf("\tfilename: %s\n",currObj->d_name);
+			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
+			strcpy(temp,name);
+			strcat(temp,"/");
+			strcat(temp,currObj->d_name);
+			printf("%s\n",temp);		
+			int fd = open(temp,O_RDONLY);
+			tokenize(fd, fname);
+			iterate();
+			free(temp);
+			close(fd);
+		}
+		else if(currObj->d_type == DT_DIR)
+		{	
+			printf("\tdirname: %s\n",currObj->d_name);
+			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
+			strcpy(temp,name);
+			strcat(temp,"/");
+			strcat(temp,currObj->d_name);
+			indexDir(temp);
+			free(temp);
+		}
+		currObj = readdir(directory);
 	}
-
-	char fullpath[PATH_MAX];
-	
-	if (strcmp("",path)==0){
-		getcwd(fullpath,PATH_MAX);
-	}
-	path=fullpath;
-	
-	
-// get next element in dir
-	struct dirent* entry= readdir(directory);
-	// while ((strcmp(".", entry->d_name) == 0 || strcmp("..", entry->d_name) == 0)){
-	// 	entry = readdir(directory);
-	// }
-	//need to make it so that when recursive index is called on a subdirectory, the path is updated so that it is still relitive to the working directory
-	
-//ignore refrences to hidden files and placeholders
-	while(entry->d_name[0]=='.'){
-		entry = readdir(directory);
-	}
-			// char * newPath;
-			// newPath = malloc(strlen(entry->d_name)+strlen(fullpath)+2);
-   //  		newPath[0] = '\0';   // ensures the memory is an empty string
-   //  		strcat(newPath,fullpath);
-   //  		strcat(newPath,entry->d_name);
-    		
-    		//no elements left in dir
-		if (entry == NULL){
-			printf("entry was null \n");
-			closedir(directory);
-			return;
-		}
-		//if dirent is file, pass file to tokenizer, pass dirstream back to recursive index to process next element in this directory. 
-		else if (isFile(newPath)){
-			printf("%swas a file\n",entry->d_name);
-			int fd = open(entry->d_name,O_RDONLY);
-			tokenize(fd);
-			recursiveIndex(NULL,directory,fullpath);
-			return;
-		}
-		//if file from stream is a child directory, call recursiveIndex on that directory and pass in dirstream to that directory. 
-		else if (isDir(newPath)){
-			printf("%swas a dir\n", entry->d_name);
-			DIR* childDir = opendir(entry->d_name);
-			//strcat(newPath,"/");
-    		printf("%snew path is \n", newPath);
-			recursiveIndex(NULL,childDir,newPath);
-			return;
-		}
-		else{
-			printf("there was a problem with file %s\n", entry->d_name);
-		}
+	return;	
 }
-
-
 
 int main(int argc, char** argv)
 {
+	char path[4096];
 	if(argc != 3)
 	{
 		fprintf(stderr, "ERROR: Invalid number of arguments\nUSAGE: ./invertedindex <inverted-index file name> <directory or file name>\n");
 		return 1;
 	}
 
+	if(!(isDir(argv[2]) || isFile(argv[2])))
+	{
+		fprintf(stderr, "ERROR: Argument 3 is not a file or directory\n");
+		return 1;
+	}
 	//FILE* output = fopen(argv[1],"w");
 
 	//if 2nd argument is a file
 	if(isFile(argv[2]))
 	{
 		int fd = open(argv[2],O_RDONLY);
-		tokenize(fd);
+		tokenize(fd, argv[2]);
+		close(fd);
 	}
 
 	//if 2nd argument is a directory(will handle recursive directory traversal after program is working with a single file)
-	else if (isDir(argv[2])){
-		recursiveIndex(argv[2],NULL,"");
-	}
-	
-	else{
-		printf("thats a bop\n");
-		struct dirent * currObj = NULL;
-		DIR* directory = opendir(argv[2]);
-		currObj = readdir(directory);
-		if(currObj != NULL)
-		{
-			if(currObj->d_type == DT_REG)
-			{
-				//currObj is a file
-				int fd = open(argv[2],O_RDONLY);
-				tokenize(fd);
-			}
-			else if(currObj->d_type == DT_DIR)
-			{
-				//currObj is a directory
-			}
-			else
-			{
-				//other
-			}
-		}
+	else
+	{
+		strcpy(path,"./");
+		strcat(path,argv[2]);
+		indexDir(path);
 	}
 
 	return 0;
