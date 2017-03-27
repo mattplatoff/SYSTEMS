@@ -29,27 +29,27 @@ typedef struct Index{
 	int size;
 } Index;
 
-void printXML(Index* index){
-	printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<fileIndex>\n");
+void printXML(FILE* f,Index* index){
+	fprintf(f,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<fileIndex>\n");
 	int i;
 	int j;
 	IndexEntry* indEnt;
 	FileEntry* fe;
 	for (i=0;i<index->size;i++){
 		indEnt=&(index->entries[i]);
-		printf("<word text=\"%s\">\n",indEnt->token);
+		fprintf(f,"\t<word text=\"%s\">\n",indEnt->token);
 		for (j=0;j<indEnt->size;j++){
 			fe=&(indEnt->files[j]);
-			printf("<file name=\"%s\">%i</file>\n",fe->fileName,fe->count);
+			fprintf(f,"\t\t<file name=\"%s\">%i</file>\n",fe->fileName,fe->count);
 		}
-		printf("</word>\n");
+		fprintf(f,"\t</word>\n");
 	}
-	printf("</fileIndex>\n");
+	fprintf(f,"</fileIndex>\n");
 }
 
 Index* buildIndex(){
 	Index* i;
-	i= (Index*)malloc(sizeof(Index));
+	i = (Index*)malloc(sizeof(Index));
 	i->entries= (IndexEntry*) malloc(sizeof(IndexEntry)*10);
 	i->capacity=10;
 	i->size = 0;
@@ -58,7 +58,7 @@ Index* buildIndex(){
 
 IndexEntry* buildIndexEntry(char* token){
 	IndexEntry* ie;
-	ie= (IndexEntry*)malloc(sizeof(IndexEntry));
+	ie = (IndexEntry*)malloc(sizeof(IndexEntry));
 	ie->files=(FileEntry*) malloc(sizeof(FileEntry)*10);
 	ie->capacity=10;
 	ie->size=0;
@@ -86,6 +86,7 @@ void addFileEntry(IndexEntry* toAdd, char* fileName){
 			toAdd->files = realloc(toAdd->files,toAdd->capacity*2);
 			toAdd->capacity*=2;
 		}
+
 		toAdd->files[toAdd->size-1]=*fe;
 	}
 	fe->count+=1;
@@ -114,7 +115,7 @@ void addIndexEntry(Index* toAdd, char* token, char* fname){
 	}
 	
 	//add file entry for this file or update existing. 
-		//addFileEntry(entry,fname);	
+		addFileEntry(entry,fname);	
 }
 
 
@@ -167,13 +168,11 @@ void tokenize(int fd, char* fname, Index* index)
 
 
 void indexDir(char name[4096], Index* index)
-
 {
 
 	struct dirent * currObj = NULL;
 	DIR* directory = opendir(name);
 	currObj = readdir(directory);
-	//chdir(name);
 	printf("%s\n",name);
 
 	while(currObj != NULL )
@@ -217,7 +216,7 @@ void indexDir(char name[4096], Index* index)
 		{
 			//other
 		}
-			printXML(index);
+			printXML(stdout,index);
 		
 		if ((currObj = readdir(directory)) == NULL){
 			break;}
@@ -243,7 +242,7 @@ int main(int argc, char** argv)
 	//if 2nd argument is a file
 
 	Index* i = buildIndex();
-
+	//FILE* out = fopen(argv[1],"w");
 	if(isFile(argv[2]))
 	{
 		int fd = open(argv[2],O_RDONLY);
@@ -259,6 +258,6 @@ int main(int argc, char** argv)
 		strcat(path,argv[2]);
 		indexDir(path, i);
 	}
-
+	//printXML(stdout,i);
 	return 0;
 }
