@@ -25,16 +25,18 @@ typedef struct wordNode
 
 static wordNode* wHead = NULL;
 
-void iterate()
+void iterate(FILE* fp)
 {
 	wordNode* ptr = wHead;
 	while(ptr != NULL)
 	{
 		printf("%s\n", ptr->token);
+		fprintf(fp,"%s\n", ptr->token);
 		fileNode* ptr2 = ptr->fHead;
 		while(ptr2 != NULL)
 		{
 			printf("\t%s: %d\n",ptr2->fileName,ptr2->count);
+			fprintf(fp,"\t%s: %d\n",ptr2->fileName,ptr2->count);
 			ptr2 = ptr2->next;
 		}
 		ptr = ptr->next;
@@ -98,6 +100,7 @@ void insertFileNode(fileNode* head, char* fileName)
 		{
 			if(ptr == head)
 			{
+				puts("yo");
 				fileNode* temp = head;
 				head = buildFileNode(fileName);
 				head->next = temp;
@@ -195,7 +198,6 @@ void tokenize(int fd, char* fname)
 		if(token != NULL)
 		{
 			token[i] = '\0';
-			printf("%s\n", token);
 			addEntry(token,fname);
 			token = NULL;
 			i = 0;
@@ -209,8 +211,6 @@ void indexDir(char name[4096])
 	struct dirent * currObj = NULL;
 	DIR* directory = opendir(name);
 	currObj = readdir(directory);
-	//chdir(name);
-	printf("%s\n",name);
 	while(currObj != NULL )
 	{
 		char* fname = (char*)malloc(strlen(currObj->d_name)+1);
@@ -224,21 +224,17 @@ void indexDir(char name[4096])
 		if(currObj->d_type == DT_REG)
 		{
 			//currObj is a file
-			printf("\tfilename: %s\n",currObj->d_name);
 			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
 			strcpy(temp,name);
 			strcat(temp,"/");
 			strcat(temp,currObj->d_name);
-			printf("%s\n",temp);		
 			int fd = open(temp,O_RDONLY);
 			tokenize(fd, fname);
-			iterate();
 			free(temp);
 			close(fd);
 		}
 		else if(currObj->d_type == DT_DIR)
 		{	
-			printf("\tdirname: %s\n",currObj->d_name);
 			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
 			strcpy(temp,name);
 			strcat(temp,"/");
@@ -265,7 +261,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "ERROR: Argument 3 is not a file or directory\n");
 		return 1;
 	}
-	//FILE* output = fopen(argv[1],"w");
+	FILE* output = fopen(argv[1],"w");
 
 	//if 2nd argument is a file
 	if(isFile(argv[2]))
@@ -282,6 +278,9 @@ int main(int argc, char** argv)
 		strcat(path,argv[2]);
 		indexDir(path);
 	}
+
+	iterate(output);
+	fclose(output);
 
 	return 0;
 }
