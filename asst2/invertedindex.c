@@ -25,6 +25,28 @@ typedef struct wordNode
 
 static wordNode* wHead = NULL;
 
+//strcmp in which numbers come after letters
+int myStrcmp(char* s1, char* s2)
+{
+	unsigned char *p1 = (unsigned char *)s1;
+    unsigned char *p2 = (unsigned char *)s2;
+
+    while (*p1 != '\0') {
+
+    	if(isdigit(*p1)&&!isdigit(*p2)) return 1;
+    	if(!isdigit(*p1)&&isdigit(*p2)) return -1;
+        if (*p2 == '\0') return  1;
+        if (*p2 > *p1)   return -1;
+        if (*p1 > *p2)   return  1;
+
+        p1++;
+        p2++;
+    }
+
+    if (*p2 != '\0') return -1;
+    return 0;
+}
+
 void iterate(FILE* fp)
 {
 	wordNode* ptr = wHead;
@@ -77,7 +99,7 @@ void insertWordNode(char* token, char* fileName)
 	while(ptr != NULL)
 	{
 
-		if(strcmp(ptr->token,token) > 0)
+		if(myStrcmp(ptr->token,token) > 0)
 		{
 			if(ptr == wHead)
 			{
@@ -105,11 +127,10 @@ fileNode* insertFileNode(fileNode* head, char* fileName)
 	fileNode* ptr = head;
 	while(ptr != NULL)
 	{
-		if(strcmp(ptr->fileName,fileName) > 0)
+		if(myStrcmp(ptr->fileName,fileName) > 0)
 		{
 			if(ptr == head)
 			{
-				puts("yo");
 				fileNode* temp = head;
 				head = buildFileNode(fileName);
 				head->next = temp;
@@ -269,7 +290,7 @@ int main(int argc, char** argv)
 
 	if(!(isDir(argv[2]) || isFile(argv[2])))
 	{
-		fprintf(stderr, "ERROR: Argument 3 is not a file or directory\n");
+		fprintf(stderr, "ERROR: '%s' is not a file or directory\n",argv[2]);
 		return 1;
 	}
 	FILE* output = fopen(argv[1],"w");
