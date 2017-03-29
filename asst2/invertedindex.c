@@ -25,6 +25,37 @@ typedef struct wordNode
 
 static wordNode* wHead = NULL;
 
+void sortFileNodes()
+{
+ 	if(wHead == NULL) return;
+ 	wordNode* ptr = wHead;
+ 	while(ptr != NULL)
+ 	{
+ 		fileNode* ptr2 = ptr->fHead;
+ 		fileNode* ptr3 = ptr->fHead;
+ 		fileNode* max = ptr->fHead;
+ 		while(ptr2 != NULL)
+ 		{	
+ 			ptr3 = ptr2;
+ 			max = ptr2;
+ 			while(ptr3 != NULL)
+ 			{
+ 				if(ptr3->count > max->count) max = ptr3;
+ 				else if(ptr3->count == max->count && strcmp(ptr3->fileName,max->fileName) < 0) max = ptr3;
+ 				ptr3 = ptr3->next;
+ 			}
+ 			char* tempFileName = ptr2->fileName;
+ 			int tempCount = ptr2->count;
+ 			ptr2->fileName = max->fileName;
+ 			ptr2->count = max->count;
+ 			max->fileName = tempFileName;
+ 			max->count = tempCount;
+ 			ptr2 = ptr2->next;
+ 		}
+  
+ 		ptr = ptr->next;
+ 	}
+}
 //strcmp in which numbers come after letters
 int myStrcmp(char* s1, char* s2)
 {
@@ -344,6 +375,7 @@ int main(int argc, char** argv)
 		indexDir(tempFileName);
 	}
 
+	sortFileNodes();
 	iterate(output);
 	fclose(output);
 	free(tempFileName);
