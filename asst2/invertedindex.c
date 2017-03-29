@@ -286,7 +286,7 @@ void indexDir(char name[4096])
 
 int main(int argc, char** argv)
 {
-	char path[4096];
+	//char path[4096];
 	if(argc != 3)
 	{
 		fprintf(stderr, "ERROR: Invalid number of arguments\nUSAGE: ./invertedindex <inverted-index file name> <directory or file name>\n");
@@ -341,9 +341,7 @@ int main(int argc, char** argv)
 	//if 2nd argument is a directory(will handle recursive directory traversal after program is working with a single file)
 	else
 	{
-		strcpy(path,"./");
-		strcat(path,tempFileName);
-		indexDir(path);
+		indexDir(tempFileName);
 	}
 
 	iterate(output);
