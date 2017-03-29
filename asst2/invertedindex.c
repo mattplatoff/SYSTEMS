@@ -303,7 +303,6 @@ void indexDir(char name[4096])
 			indexDir(temp);
 			free(temp);
 		}
-		if(wHead != NULL ) if(wHead -> fHead -> next != NULL) printf("%s\n",wHead->fHead->next->fileName);
 		currObj = readdir(directory);
 	}
 	closedir(directory);
@@ -374,6 +373,8 @@ int main(int argc, char** argv)
 	iterate(output);
 	fclose(output);
 	free(tempFileName);
+
+	printf("Output in file: '%s'...\n",argv[1]);
 
 	return 0;
 }
