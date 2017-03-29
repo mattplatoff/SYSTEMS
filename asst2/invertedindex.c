@@ -25,14 +25,14 @@ typedef struct wordNode
 
 static wordNode* wHead = NULL;
 
+
+
 //strcmp in which numbers come after letters
 int myStrcmp(char* s1, char* s2)
 {
 	unsigned char *p1 = (unsigned char *)s1;
     unsigned char *p2 = (unsigned char *)s2;
-
     while (*p1 != '\0') {
-
     	if(isdigit(*p1)&&!isdigit(*p2)) return 1;
     	if(!isdigit(*p1)&&isdigit(*p2)) return -1;
         if (*p2 == '\0') return  1;
@@ -282,6 +282,7 @@ void indexDir(char name[4096])
 		if(wHead != NULL ) if(wHead -> fHead -> next != NULL) printf("%s\n",wHead->fHead->next->fileName);
 		currObj = readdir(directory);
 	}
+	closedir(directory);
 	return;	
 }
 
@@ -294,18 +295,48 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	if(!(isDir(argv[2]) || isFile(argv[2])))
+	char* tempFileName = (char*)malloc(strlen(argv[2]));
+
+	if(argv[2][strlen(argv[2])-1] == '/')
+	{
+		strncpy(tempFileName, argv[2], strlen(argv[2])-1);
+		tempFileName[strlen(argv[2])] = '\0';
+	}
+	else
+	{
+		strcpy(tempFileName,argv[2]);
+	}
+
+	if(!(isDir(tempFileName) || isFile(tempFileName)))
 	{
 		fprintf(stderr, "ERROR: '%s' is not a file or directory\n",argv[2]);
 		return 1;
 	}
+
+	if(access(argv[1], F_OK ) != -1) 
+	{
+		printf("WARNING: File '%s' already exists, would you like to overwrite? (y/n)\n", argv[1]);
+		char input;
+		scanf("%c",&input);
+		while(input != 'y' && input != 'n')
+		{
+			printf("Invalid input, please enter either 'y' or 'n'.\n");
+			scanf("%c",&input);
+		}
+		if(input == 'n')
+		{
+			printf("Exiting...\n");
+			return 0;
+		}
+	} 
+  
 	FILE* output = fopen(argv[1],"w");
 
 	//if 2nd argument is a file
-	if(isFile(argv[2]))
+	if(isFile(tempFileName))
 	{
-		int fd = open(argv[2],O_RDONLY);
-		tokenize(fd, argv[2]);
+		int fd = open(tempFileName,O_RDONLY);
+		tokenize(fd, tempFileName);
 		close(fd);
 	}
 
@@ -313,12 +344,13 @@ int main(int argc, char** argv)
 	else
 	{
 		strcpy(path,"./");
-		strcat(path,argv[2]);
+		strcat(path,tempFileName);
 		indexDir(path);
 	}
 
 	iterate(output);
 	fclose(output);
+	free(tempFileName);
 
 	return 0;
 }
