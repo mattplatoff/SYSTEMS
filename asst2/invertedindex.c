@@ -350,7 +350,7 @@ int main(int argc, char** argv)
 		while(input != 'y' && input != 'n')
 		{
 			printf("Invalid input, please enter either 'y' or 'n'.\n");
-			scanf("%c",&input);
+			scanf("%c\n",&input);
 		}
 		if(input == 'n')
 		{
