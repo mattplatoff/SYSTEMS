@@ -339,14 +339,14 @@ int main(int argc, char** argv)
 	if(access(argv[1], F_OK ) != -1) 
 	{
 		printf("WARNING: File '%s' already exists, would you like to overwrite? (y/n)\n", argv[1]);
-		char input;
-		scanf("%c",&input);
-		while(input != 'y' && input != 'n')
+		char input[2];
+		scanf("%s",input);
+		while(input[0] != 'y' && input[0] != 'n')
 		{
 			printf("Invalid input, please enter either 'y' or 'n'.\n");
-			scanf("%c\n",&input);
+			scanf("%s",input);
 		}
-		if(input == 'n')
+		if(input[0] == 'n')
 		{
 			printf("Exiting...\n");
 			return 0;
