@@ -79,24 +79,19 @@ int myStrcmp(char* s1, char* s2)
 void iterate(FILE* fp)
 {
 	wordNode* ptr = wHead;
-	printf("<?xml version=\"1.0\" encoding=\"UTF-8\">\n<fileIndex>\n");
 	fprintf(fp, "<?xml version=\"1.0\" encoding=\"UTF-8\">\n<fileIndex>\n");
 	while(ptr != NULL)
 	{
-		printf("\t<word text=\"%s\">\n", ptr->token);
 		fprintf(fp,"\t<word text=\"%s\">\n", ptr->token);
 		fileNode* ptr2 = ptr->fHead;
 		while(ptr2 != NULL)
 		{
-			printf("\t\t<file name=\"%s\">%d</file>\n",ptr2->fileName,ptr2->count);
 			fprintf(fp,"\t\t<file name=\"%s\">%d</file>\n",ptr2->fileName,ptr2->count);
 			ptr2 = ptr2->next;
 		}
-		printf("\t</word>\n");
 		fprintf(fp,"\t</word>\n");
 		ptr = ptr->next;
 	}
-	printf("</fileIndex>\n");
 	fprintf(fp,"</fileIndex>\n");
 }
 
