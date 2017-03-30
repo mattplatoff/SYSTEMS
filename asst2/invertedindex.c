@@ -41,7 +41,7 @@ void sortFileNodes()
  			while(ptr3 != NULL)
  			{
  				if(ptr3->count > max->count) max = ptr3;
- 				else if(ptr3->count == max->count && strcmp(ptr3->fileName,max->fileName) < 0) max = ptr3;
+ 				else if(ptr3->count == max->count && myStrcmp(ptr3->fileName,max->fileName) < 0) max = ptr3;
  				ptr3 = ptr3->next;
  			}
  			char* tempFileName = ptr2->fileName;
