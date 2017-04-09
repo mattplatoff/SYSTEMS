@@ -66,35 +66,40 @@ IndexEntry* buildIndexEntry(char* token){
 	return ie;
 }
 
+FileEntry* buildFileEntry(char* fileName){
+		FileEntry* fe;
+		fe = (FileEntry*)malloc(sizeof(FileEntry));
+		fe->fileName=fileName;
+		fe->count=0;
+		return fe;
+}
+
 //check if file entry exists for current index entry, if it does, increment, if not, build new entry and add to index.  
 void addFileEntry(IndexEntry* toAdd, char* fileName){
-	printf("add file entry called\n");
 	int i;
 	FileEntry* fe = NULL;
 	for(i=0;i<toAdd->size;i++){
 		if (!strcmp(toAdd->files[i].fileName,fileName)){
-			fe=&toAdd->files[i];
+			fe=&(toAdd->files[i]);
 		}
 	}
 
 	if(fe == NULL){
-		fe=malloc(sizeof(FileEntry));
-		fe->fileName=fileName;
-		fe->count=0;
+		fe = buildFileEntry(fileName);
 		toAdd->size+=1;
 		if (toAdd->size>=toAdd->capacity){
 			toAdd->files = realloc(toAdd->files,toAdd->capacity*2);
 			toAdd->capacity*=2;
+			printf("fileEntry expand");
 		}
-
 		toAdd->files[toAdd->size-1]=*fe;
 	}
 	fe->count+=1;
-printf("exited add file entry\n");
+	printf("file entry file name: %s\n",fe->fileName );
+	printf("index entry file entry fname= %s\n", toAdd->files[toAdd->size-1].fileName);
 }
  
 void addIndexEntry(Index* toAdd, char* token, char* fname){
-	printf("add index entry called\n");
 	int i;
 	IndexEntry* entry= NULL;
 	//check if index entry exists for this token 
@@ -108,6 +113,7 @@ void addIndexEntry(Index* toAdd, char* token, char* fname){
 	entry = buildIndexEntry(token);
 	toAdd->size+=1;
 	if (toAdd->size>=toAdd->capacity){
+		printf("index entry expand");
 		toAdd->entries = realloc(toAdd->entries,toAdd->capacity*2);
 		toAdd->capacity*=2;
 	}
@@ -115,6 +121,7 @@ void addIndexEntry(Index* toAdd, char* token, char* fname){
 	}
 	
 	//add file entry for this file or update existing. 
+
 		addFileEntry(entry,fname);	
 }
 
@@ -155,13 +162,12 @@ void tokenize(int fd, char* fname, Index* index)
 		if(token != NULL)
 		{
 			token[i] = '\0';
-			printf("%s\n", token);
+			//printf("%s\n", token);
 			addIndexEntry(index,token,fname);
 			token = NULL;
 			i = 0;
 		}
 	}
-	printf("exited tokenize\n");
 	return;
 }
 
@@ -169,15 +175,14 @@ void tokenize(int fd, char* fname, Index* index)
 
 void indexDir(char name[4096], Index* index)
 {
+				printXML(stdout,index);
 
 	struct dirent * currObj = NULL;
 	DIR* directory = opendir(name);
 	currObj = readdir(directory);
-	printf("%s\n",name);
 
 	while(currObj != NULL )
 	{
-		printf(" at beg of loop%s\n",currObj->d_name);
 		if (currObj->d_name[0]=='.')
 		{
 			currObj = readdir(directory);
@@ -187,7 +192,7 @@ void indexDir(char name[4096], Index* index)
 		if(currObj->d_type == DT_REG)
 		{
 			//currObj is a file
-			printf("\tfilename: %s\n",currObj->d_name);
+			//printf("\tfilename: %s\n",currObj->d_name);
 			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
 			strcpy(temp,name);
 			strcat(temp,"/");
@@ -201,7 +206,7 @@ void indexDir(char name[4096], Index* index)
 		
 		else if(currObj->d_type == DT_DIR)
 		{	
-			printf("\tdirname: %s\n",currObj->d_name);
+			//printf("\tdirname: %s\n",currObj->d_name);
 
 			char* temp = (char*)malloc(strlen(name) + strlen(currObj->d_name) + 2);
 			strcpy(temp,name);
@@ -216,12 +221,10 @@ void indexDir(char name[4096], Index* index)
 		{
 			//other
 		}
-			printXML(stdout,index);
 		
 		if ((currObj = readdir(directory)) == NULL){
 			break;}
 
-		printf("after read%s\n",currObj->d_name );
 	}
 
 	return;	

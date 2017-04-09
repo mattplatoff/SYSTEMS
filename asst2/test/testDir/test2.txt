@@ -1,1 +1,1 @@
-this file is a test file inside a directory. 
+this file is a test file inside a directory.
