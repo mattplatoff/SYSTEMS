@@ -1,96 +1,19 @@
 #include <stdio.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <netdb.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 
 #define PORT_NUM 8686
 
 
-extern int sockfd = -1;
+int sockfd = -1;
 
-
-int netopen(const char* pathname, int flags){
-	n = write(sockfd,"NOPEN",strlen("NOPEN"));
-   
-   if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
-   }
-   
-   /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
-   
-   if (n < 0) {
-      perror("ERROR reading from socket");
-      exit(1);
-   }
-}
-
-size_t netwrite(int filedes, void* buf, size_t nbyte){
-	
-	n = write(sockfd,"NWRITE",strlen("NWRITE"));
-   
-   if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
-   }
-   
-   /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
-   
-   if (n < 0) {
-      perror("ERROR reading from socket");
-      exit(1);
-   }
-}
-
-size_t netread(int filedes, void* buf, size_t nbyte){
-	n = write(sockfd,"NREAD",strlen("NREAD"));
-   
-   if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
-   }
-   
-   /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
-   
-   if (n < 0) {
-      perror("ERROR reading from socket");
-      exit(1);
-   }
-}
-
-int netclose(int fd){
-	n = write(sockfd,"NCLOSE",strlen("NCLOSE"));
-   
-   if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
-   }
-   
-   /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
-   
-   if (n < 0) {
-      perror("ERROR reading from socket");
-      exit(1);
-   }
-}
-
-int netserverinit(char* hostname){
-	int n;
+int netserverinit(const char* hostname){
+	int portno;
    struct sockaddr_in serv_addr;
    struct hostent *server;
 	
@@ -104,7 +27,7 @@ int netserverinit(char* hostname){
       exit(1);
    }
 	
-   server = gethostbyname(argv[1]);
+   server = gethostbyname(hostname);
    
    if (server == NULL) {
       fprintf(stderr,"ERROR, no such host\n");
@@ -123,5 +46,94 @@ int netserverinit(char* hostname){
    }
    
    return 0;
+}
+
+void netopen(const char* pathname, int flags){
+	int n;
+	n = write(sockfd,"NOPEN",strlen("NOPEN"));
+   
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
+   
+   /* Now read server response */
+   char buffer[256];
+   bzero(buffer,256);
+   n = read(sockfd, buffer, 255);
+   
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
+}
+
+void netwrite(int filedes, void* buf, size_t nbyte){
+	int n;
+	n = write(sockfd,"NWRITE",strlen("NWRITE"));
+   
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
+   
+   /* Now read server response */
+   char buffer[256];
+   bzero(buffer,256);
+   n = read(sockfd, buffer, 255);
+   
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
+}
+
+void netread(int filedes, void* buf, size_t nbyte){
+	int n;
+	n = write(sockfd,"NREAD",strlen("NREAD"));
+   
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
+   
+   /* Now read server response */
+   char buffer[256];
+   bzero(buffer,256);
+   n = read(sockfd, buffer, 255);
+   
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
+}
+
+void netclose(int fd){
+	int n;
+	n = write(sockfd,"NCLOSE",strlen("NCLOSE"));
+   
+   if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+   }
+   
+   /* Now read server response */
+   char buffer[256];
+   bzero(buffer,256);
+   n = read(sockfd, buffer, 255);
+   
+   if (n < 0) {
+      perror("ERROR reading from socket");
+      exit(1);
+   }
+}
+
+
+
+int main(int argc, char const *argv[])
+{
+	netserverinit(argv[1]);
+	netopen("",-1);
+	return 0;
 }
 
