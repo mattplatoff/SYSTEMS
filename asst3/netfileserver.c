@@ -35,24 +35,40 @@ void processConnection(int sockfd){
    		//pass in buffer from client and open with params 
    		fdes=lopen(buffer);
    		//prepare to send back fdes, make up own fdes tho and store relationship.
+   		//	as per program spec, fd on client side should be negative of fd on server side
+   		fdes*=-1;
    		char num[12];
    		bzero(retBuff,1024);
    		strcpy(retBuff,"NOPEN:");
    		sprintf(num,"%d",fdes);
-   		strcpy(retBuff,num);
-   		strcpy(retBuff,":");
-   		//write back to server
+   		strcat(retBuff,num);
+   		strcat(retBuff,":");
+
+   		//write back to client
    		n = write(sockfd,retBuff,1024);
    		if (n < 0) {
       	perror("ERROR writing to socket");
       	exit(1);
    		}
-   		
-
    	}
 
    	else if (!strncmp(buffer,"NCLOS",5)){
+   		printf("NCLOS\n");
 
+   		//0 if success, -1 if failure
+   		int success = lclose(buffer)
+ 		char succ[4];
+   		bzero(retBuff,1024);
+      	strcpy(retBuff,"NCLOS:");
+      	sprintf(succ,"%d:",success);
+      	strcat(retBuff,succ);
+
+      	//write back to client
+      	n = write(sockfd,retBuff,1024);
+   		if (n < 0) {
+      	perror("ERROR writing to socket");
+      	exit(1);
+   		}
    	}
    	else if (!strncmp(buffer,"NWRIT",5)){
 
@@ -74,34 +90,48 @@ int lRead(int n, FILE* fp ){
 }
 
 int lopen(char * buff){
-	printf("local open");
+	printf("local open\n");
 	char* path[1024];
 	char* flag=[3];
-	int i, flag, fdes;
+	int i, iflag, fdes;
 
 	//pull params out of buffer 
-	for (i=5;buff[i]!=':';i++);
+	for (i=6;buff[i]!=':';i++);
 	memcpy(path,&buff[6],i-5);
-	memcpy(flag,&buff[i],2);
+	path[i-5] = '\0';
+	memcpy(flag,&buff[i+1],2);
+	flag[2] = '\0';
 
 	if (!strncmp(flag,"r-",2)){
-		flag=O_RDONLY;
+		iflag=O_RDONLY;
 	}
 	else if (!strncmp(flag,"w-",2)){
-		flag = O_WRONLY;
+		iflag = O_WRONLY;
 	}
 	else if(!strncmp(flag,"rw",2)){
-		flag = O_RDWR;
+		iflag = O_RDWR;
 	}
 	//open file and return file discriptor 
-	fdes = open(path, flag);
+	fdes = open(path, iflag);
 
 
 	return fdes;
 }
 
-int lclose(FILE* fp){
-	return 0;
+int lclose(char* buff){
+	printf("local close\n");
+	int i, fdes, n;
+
+	for(i = 6; buff[i]!=':'; i++);
+   	char* num = (char*)malloc(i-5);
+   	strncpy(num,&buff[6],i-6);
+   	num[i-5] = '\0';
+   	fdes = atoi(num) * -1;
+   	free(num);
+
+   	n = close(fdes);
+
+	return n;
 }
 
 int lwrite(const char *s, FILE *fp){

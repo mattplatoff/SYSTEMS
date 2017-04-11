@@ -66,9 +66,9 @@ int netopen(const char* pathname, int flags){
 	}
 	char sendBuff[1024];
 	strcpy(sendBuff,"NOPEN:");
-	strcpy(sendBuff,pathname);
-	strcpy(sendBuff,":");
-	strcpy(sendBuff,flag);
+	strcat(sendBuff,pathname);
+	strcat(sendBuff,":");
+	strcat(sendBuff,flag);
 
 	n = write(sockfd,sendBuff,1024);
    	
@@ -81,18 +81,21 @@ int netopen(const char* pathname, int flags){
    /* Now read server response */
    char buffer[1024];
    bzero(buffer,1024);
-   n = read(sockfd, buffer, 1023);
+   int i;
+   n = read(sockfd, buffer, 1024);
+
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
    }
 
-   char fdesstring[11];
-   for (i=5;buffer[i]!=':';i++);
-   memcpy(fdesstring,&buffer[6],i-5);
-	
-	fdes=atoi(fdesstring);
-
+   //I think i should start at 6, not 5, and also am now mallocing mem for fdes string -> more effecient with memory, although it is trivial
+   for(i = 6; buffer[i]!=':'; i++);
+   char* num = (char*)malloc(i-5);
+   strncpy(num,&buffer[6],i-6);
+   num[i-5] = '\0';
+   fdes = atoi(num);
+   free(num);
    
    return fdes;
 }
@@ -137,9 +140,18 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
 }
 
-void netclose(int fd){
+int netclose(int fd){
 	int n;
-	n = write(sockfd,"NCLOS",strlen("NCLOS"));
+
+	char fdes[12];
+	sprintf(fdes,"%d",fd);
+
+	char sendBuff[1024];
+	strcpy(sendBuff,"NCLOS:");
+	strcat(sendBuff,fdes);
+	strcat(sendBuff,":");
+
+	n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");

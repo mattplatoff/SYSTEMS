@@ -25,6 +25,26 @@ typedef struct wordNode
 
 static wordNode* wHead = NULL;
 
+//strcmp in which numbers come after letters
+int myStrcmp(char* s1, char* s2)
+{
+	unsigned char *p1 = (unsigned char *)s1;
+    unsigned char *p2 = (unsigned char *)s2;
+    while (*p1 != '\0') {
+    	if(isdigit(*p1)&&!isdigit(*p2)) return 1;
+    	if(!isdigit(*p1)&&isdigit(*p2)) return -1;
+        if (*p2 == '\0') return  1;
+        if (*p2 > *p1)   return -1;
+        if (*p1 > *p2)   return  1;
+
+        p1++;
+        p2++;
+    }
+
+    if (*p2 != '\0') return -1;
+    return 0;
+}
+
 void sortFileNodes()
 {
  	if(wHead == NULL) return;
@@ -55,25 +75,6 @@ void sortFileNodes()
   
  		ptr = ptr->next;
  	}
-}
-//strcmp in which numbers come after letters
-int myStrcmp(char* s1, char* s2)
-{
-	unsigned char *p1 = (unsigned char *)s1;
-    unsigned char *p2 = (unsigned char *)s2;
-    while (*p1 != '\0') {
-    	if(isdigit(*p1)&&!isdigit(*p2)) return 1;
-    	if(!isdigit(*p1)&&isdigit(*p2)) return -1;
-        if (*p2 == '\0') return  1;
-        if (*p2 > *p1)   return -1;
-        if (*p1 > *p2)   return  1;
-
-        p1++;
-        p2++;
-    }
-
-    if (*p2 != '\0') return -1;
-    return 0;
 }
 
 void iterate(FILE* fp)
