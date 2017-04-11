@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -48,29 +52,54 @@ int netserverinit(const char* hostname){
    return 0;
 }
 
-void netopen(const char* pathname, int flags){
-	int n;
-	n = write(sockfd,"NOPEN",strlen("NOPEN"));
-   
+int netopen(const char* pathname, int flags){
+	int n,fdes;
+	char flag[3];
+	if (flags == O_RDONLY){
+		flag="r-";
+	}
+	else if (flags == O_WRONLY){
+		flag="w-";
+	}
+	else if (flags == O_RDWR){
+		flag="rw";
+	}
+	char sendBuff[1024];
+	strcpy(sendBuff,"NOPEN:");
+	strcpy(sendBuff,pathname);
+	strcpy(sendBuff,":");
+	strcpy(sendBuff,flag);
+
+	n = write(sockfd,sendBuff,1024);
+   	
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
    }
+
    
    /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
-   
+   char buffer[1024];
+   bzero(buffer,1024);
+   n = read(sockfd, buffer, 1023);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
    }
+
+   char fdesstring[11];
+   for (i=5;buffer[i]!=':';i++);
+   memcpy(fdesstring,&buffer[6],i-5);
+	
+	fdes=atoi(fdesstring);
+
+   
+   return fdes;
 }
 
 void netwrite(int filedes, void* buf, size_t nbyte){
 	int n;
-	n = write(sockfd,"NWRITE",strlen("NWRITE"));
+	n = write(sockfd,"NWRIT",strlen("NWRIT"));
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -110,7 +139,7 @@ void netread(int filedes, void* buf, size_t nbyte){
 
 void netclose(int fd){
 	int n;
-	n = write(sockfd,"NCLOSE",strlen("NCLOSE"));
+	n = write(sockfd,"NCLOS",strlen("NCLOS"));
    
    if (n < 0) {
       perror("ERROR writing to socket");

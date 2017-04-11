@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -11,9 +15,11 @@
 void processConnection(int sockfd){
 	printf("process connection\n");
 	int n;
-   	char buffer[256];
-   	bzero(buffer,256);
-   	n = read(sockfd,buffer,255);
+   	char buffer[1024];
+   	char retBuff[1024];
+
+   	bzero(buffer,1024);
+   	n = read(sockfd,buffer,1024);
    
    	if (n < 0) {
       perror("ERROR reading from socket");
@@ -21,29 +27,86 @@ void processConnection(int sockfd){
    	}
    
    	printf("message recieved: %s\n",buffer);
-   	n = write(sockfd,"I got your message",18);
-   
-   	if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
+
+   	if (!strncmp(buffer,"NOPEN",5)){
+   		printf("NOPEN\n");
+   		//get local file descriptor, should then save this and send back dummy file descriptor? and keep relationship
+   		int fdes = -1;
+   		//pass in buffer from client and open with params 
+   		fdes=lopen(buffer);
+   		//prepare to send back fdes, make up own fdes tho and store relationship.
+   		char num[12];
+   		bzero(retBuff,1024);
+   		strcpy(retBuff,"NOPEN:");
+   		sprintf(num,"%d",fdes);
+   		strcpy(retBuff,num);
+   		strcpy(retBuff,":");
+   		//write back to server
+   		n = write(sockfd,retBuff,1024);
+   		if (n < 0) {
+      	perror("ERROR writing to socket");
+      	exit(1);
+   		}
+   		
+
    	}
+
+   	else if (!strncmp(buffer,"NCLOS",5)){
+
+   	}
+   	else if (!strncmp(buffer,"NWRIT",5)){
+
+   	}
+   	else if (!strncmp(buffer,"NREAD",5)){
+
+   	}
+
+   	//n = write(sockfd,"I got your message",18);
+   
+   	// if (n < 0) {
+    //   perror("ERROR writing to socket");
+    //   exit(1);
+   	// }
 }
 
-// int lRead(int n, FILE* fp ){
+int lRead(int n, FILE* fp ){
+	return 0;
+}
 
-// }
+int lopen(char * buff){
+	printf("local open");
+	char* path[1024];
+	char* flag=[3];
+	int i, flag, fdes;
 
-// int lopen(const char * filename, const char * mode){
+	//pull params out of buffer 
+	for (i=5;buff[i]!=':';i++);
+	memcpy(path,&buff[6],i-5);
+	memcpy(flag,&buff[i],2);
 
-// }
+	if (!strncmp(flag,"r-",2)){
+		flag=O_RDONLY;
+	}
+	else if (!strncmp(flag,"w-",2)){
+		flag = O_WRONLY;
+	}
+	else if(!strncmp(flag,"rw",2)){
+		flag = O_RDWR;
+	}
+	//open file and return file discriptor 
+	fdes = open(path, flag);
 
-// int lclose(FILE* fp){
 
-// }
+	return fdes;
+}
 
-// int lwrite(const char *s, FILE *fp){
+int lclose(FILE* fp){
+	return 0;
+}
 
-// }
+int lwrite(const char *s, FILE *fp){
+	return 0;
+}
 
 void openSocket(int port){
 	
