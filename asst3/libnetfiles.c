@@ -55,7 +55,7 @@ int netserverinit(const char* hostname){
 
 int netopen(const char* pathname, int flags){
 	int n,fdes;
-	char flag[3];
+	char* flag;
 	if (flags == O_RDONLY){
 		flag="r-";
 	}
@@ -98,7 +98,7 @@ int netopen(const char* pathname, int flags){
    fdes = atoi(num);
    if (fdes==-1){
       //change this to error message later
-      perror(An Error has occoured);
+      perror("An Error has occoured");
    }
    free(num);
    
@@ -111,13 +111,13 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    char size[16];
    char buffer[1024];
    sprintf(fdes,"%d:",filedes);
-   sprintf(size,"%d:",nbyte);
+   sprintf(size,"%zu:",nbyte);
    strcpy(buffer,"NWRIT:");
    strcat(buffer,fdes);
    strcat(buffer,size);
    strcat(buffer,buf);
 
-	n = write(sockfd,"NWRIT",strlen("NWRIT"));
+	n = write(sockfd,buffer,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -125,9 +125,9 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
+   char buff[256];
+   bzero(buff,256);
+   n = read(sockfd, buff, 255);
    
    if (n < 0) {
       perror("ERROR reading from socket");
@@ -178,7 +178,7 @@ int netclose(int fd){
    bzero(buffer,256);
    n = read(sockfd, buffer, 255);
    
-   int i;
+   
    if (buffer[6]!='0'){
       perror("Error closing file");
    }
@@ -187,6 +187,7 @@ int netclose(int fd){
       perror("ERROR reading from socket");
       exit(1);
    }
+   return 0;
 }
 
 
