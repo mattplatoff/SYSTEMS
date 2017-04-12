@@ -57,7 +57,7 @@ void processConnection(int sockfd){
 
    		//0 if success, -1 if failure
    		int success = lclose(buffer)
- 		char succ[4];
+ 		   char succ[4];
    		bzero(retBuff,1024);
       	strcpy(retBuff,"NCLOS:");
       	sprintf(succ,"%d:",success);
@@ -71,6 +71,7 @@ void processConnection(int sockfd){
    		}
    	}
    	else if (!strncmp(buffer,"NWRIT",5)){
+         lwrite(buffer);
 
    	}
    	else if (!strncmp(buffer,"NREAD",5)){
@@ -93,7 +94,7 @@ int lopen(char * buff){
 	printf("local open\n");
 	char* path[1024];
 	char* flag=[3];
-	int i, iflag, fdes;
+	int i, iflag, fdes, networkfdes;
 
 	//pull params out of buffer 
 	for (i=6;buff[i]!=':';i++);
@@ -113,9 +114,9 @@ int lopen(char * buff){
 	}
 	//open file and return file discriptor 
 	fdes = open(path, iflag);
+   networkfdes = fdes*-1;
 
-
-	return fdes;
+	return networkfdes;
 }
 
 int lclose(char* buff){
@@ -134,8 +135,24 @@ int lclose(char* buff){
 	return n;
 }
 
-int lwrite(const char *s, FILE *fp){
-	return 0;
+int lwrite(const char *buff){
+	char fdes[16];
+   char size [16];
+   char message[1024];
+   int fdesc,wsize;
+   int i,j,ret;
+   for (i=6;buff[i]!=':';i++);
+      strncpy(fdes,&buff[i]!=':',i-6);
+   for (j=i+1;buff[j]!=':',j++);
+      strncpy(size,&buff[i],j-i);
+   wsize = atoi(size);
+   fdesc=atoi(fdes);
+   fdesc*=-1;
+   strncpy(message,buff[j+1],wsize);
+   ret = write(fdesc,message,size);
+
+
+   return ret;
 }
 
 void openSocket(int port){

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -95,6 +96,10 @@ int netopen(const char* pathname, int flags){
    strncpy(num,&buffer[6],i-6);
    num[i-5] = '\0';
    fdes = atoi(num);
+   if (fdes==-1){
+      //change this to error message later
+      perror(An Error has occoured);
+   }
    free(num);
    
    return fdes;
@@ -102,6 +107,16 @@ int netopen(const char* pathname, int flags){
 
 void netwrite(int filedes, void* buf, size_t nbyte){
 	int n;
+   char fdes[16];
+   char size[16];
+   char buffer[1024];
+   sprintf(fdes,"%d:",filedes);
+   sprintf(size,"%d:",nbyte);
+   strcpy(buffer,"NWRIT:");
+   strcat(buffer,fdes);
+   strcat(buffer,size);
+   strcat(buffer,buf);
+
 	n = write(sockfd,"NWRIT",strlen("NWRIT"));
    
    if (n < 0) {
@@ -163,6 +178,11 @@ int netclose(int fd){
    bzero(buffer,256);
    n = read(sockfd, buffer, 255);
    
+   int i;
+   if (buffer[6]!='0'){
+      perror("Error closing file");
+   }
+
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
