@@ -143,7 +143,17 @@ void netwrite(int filedes, void* buf, size_t nbyte){
 
 void netread(int filedes, void* buf, size_t nbyte){
 	int n;
-	n = write(sockfd,"NREAD",strlen("NREAD"));
+	char fdes[16];
+	char size[16];
+	char sendBuff[1024];
+
+	sprintf(fdes, "%d:", filedes);
+	sprintf(size, "%zu:", nbyte);
+	strcpy(sendBuff, "NREAD:");
+	strcat(sendBuff, fdes);
+	strcar(sendBuff, size);
+
+	n = write(sockfd,buffer,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -151,14 +161,25 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char buffer[256];
-   bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
+   char* fromServer = (char*)malloc(nbyte + 11);
+   n = read(sockfd, fromServer, nbyte+11);
    
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
    }
+
+   int i,j;
+   for(i=6,fromServer[i]!=':';i++);
+   for(j=i,fromServer[j]!=':';j++);
+    
+   if(fromServer[6]!='0')
+   {
+   		perror("ERROR reading from file");
+   		return;
+   }
+
+   strncpy(buf,&fromServer[j+1],nbyte);		
 }
 
 int netclose(int fd){
@@ -183,15 +204,14 @@ int netclose(int fd){
    char buffer[256];
    bzero(buffer,256);
    n = read(sockfd, buffer, 255);
-   
-   
-   if (buffer[6]!='0'){
-      perror("Error closing file");
-   }
 
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
+   }
+
+   if (buffer[6]!='0'){
+      perror("Error closing file");
    }
    return 0;
 }

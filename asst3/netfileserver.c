@@ -15,8 +15,28 @@
 
 
 
-int lRead(int n, FILE* fp ){
-	return 0;
+int lRead(char* buff, char* readTo){
+	int fdes, size, i, j, n;
+
+	for(i=6;buff[i]!=':';i++);
+	for(j=i;buff[j]!=':';j++;)
+	char* fd = (char*)malloc(i-5);
+	char* s = (char*)malloc((j-i) + 1);
+	strncpy(fd, &buff[6], i-6);
+	strncpy(s, &buff[i], j-i);
+	fd[i-5] = '\0';
+	s[(j-i)+1] = '\0';
+	fdes = atoi(fd)*-1;
+	size = atoi(s) + 1;
+	free(fd);
+	free(s);
+
+	readTo = (char*)malloc(size);
+	n = read(fdes, readTo, size);
+	readTo[size] = '\0';
+
+	return n;
+
 }
 
 int lopen(char * buff){
@@ -151,10 +171,25 @@ void processConnection(int sockfd){
       }
       else if (!strncmp(buffer,"NWRIT",5)){
          lwrite(buffer);
-
       }
       else if (!strncmp(buffer,"NREAD",5)){
+      	char* readTo;
+      	int success = lread(buffer,readTo);
 
+      	char succ[4];
+        sprintf(succ,"%d:",success);
+        char* sendToClient = (char*)malloc(strlen(readTo) + strlen(succ) + 7);
+        strcpy(sendToClient,"NREAD:");
+        strcat(sendToClient,succ);
+        strcat(sendToClient,readTo);
+      	//write back to client
+      	n = write(sockfd,sendToClient, strlen(sendToClient));
+        if (n < 0) {
+         perror("ERROR writing to socket");
+         exit(1);
+        } 
+        free(sendToClient);
+        free(readTo);   	
       }
 
       n = write(sockfd,"I got your message",18);
