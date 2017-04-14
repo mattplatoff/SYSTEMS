@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -15,10 +16,11 @@
 #define PORT_NUM 8686
 
 
-int sockfd = -1;
+int sockfd;
 
 int netserverinit(const char* hostname){
-	int portno;
+	printf("net server init\n");
+   int portno;
    struct sockaddr_in serv_addr;
    struct hostent *server;
 	
@@ -31,30 +33,34 @@ int netserverinit(const char* hostname){
       perror("ERROR opening socket");
       exit(1);
    }
-	
+	printf("sockfd = %d\n", sockfd);
    server = gethostbyname(hostname);
    
    if (server == NULL) {
       fprintf(stderr,"ERROR, no such host\n");
       exit(0);
    }
-   
+
+   printf("got server \n");
    bzero((char *) &serv_addr, sizeof(serv_addr));
    serv_addr.sin_family = AF_INET;
    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
    serv_addr.sin_port = htons(portno);
-   
+   printf("set server params\n");
    /* Now connect to the server */
-   if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+   
+   if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
       perror("ERROR connecting");
       exit(1);
    }
-   
+
+   printf("exit net server init\n");
    return 0;
 }
 
 int netopen(const char* pathname, int flags){
-	int n,fdes;
+	printf("net open called\n");
+   int n,fdes;
 	char* flag;
 	if (flags == O_RDONLY){
 		flag="r-";
@@ -77,13 +83,13 @@ int netopen(const char* pathname, int flags){
       perror("ERROR writing to socket");
       exit(1);
    }
-
+   printf("n val was %d\n",n );
    
    /* Now read server response */
    char buffer[1024];
    bzero(buffer,1024);
    int i;
-   n = read(sockfd, buffer, 1024);
+   n = read(sockfd, buffer, 1023);
 
    if (n < 0) {
       perror("ERROR reading from socket");
@@ -194,8 +200,9 @@ int netclose(int fd){
 
 int main(int argc, char const *argv[])
 {
+   printf("client started attempting to connect on %s\n",argv[1]);
 	netserverinit(argv[1]);
-	netopen("",-1);
+	netopen("test.txt",12341234);
 	return 0;
 }
 

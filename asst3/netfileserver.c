@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -91,13 +92,13 @@ int lwrite(const char *buff){
 }
 
 void processConnection(int sockfd){
-   printf("process connection\n");
+   printf("connection established\n");
    int n;
       char buffer[1024];
       char retBuff[1024];
 
       bzero(buffer,1024);
-      n = read(sockfd,buffer,1024);
+      n = read(sockfd,buffer,1023);
    
       if (n < 0) {
       perror("ERROR reading from socket");
@@ -156,23 +157,23 @@ void processConnection(int sockfd){
 
       }
 
-      //n = write(sockfd,"I got your message",18);
+      n = write(sockfd,"I got your message",18);
    
-      // if (n < 0) {
-    //   perror("ERROR writing to socket");
-    //   exit(1);
-      // }
+      if (n < 0) {
+      perror("ERROR writing to socket");
+      exit(1);
+      }
 }
 
 void openSocket(int port){
-	
+	printf("open socket\n");
 	int sockfd, newsockfd, portno, clilen;
    struct sockaddr_in serv_addr, cli_addr;
    int pid;
    
    /* First call to socket() function */
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-   
+   printf("sockfd = %d\n",sockfd );
    if (sockfd < 0) {
       perror("ERROR opening socket");
       exit(1);
@@ -181,17 +182,17 @@ void openSocket(int port){
    /* Initialize socket structure */
    bzero((char *) &serv_addr, sizeof(serv_addr));
    portno = PORT_NUM;
-   
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = INADDR_ANY;
    serv_addr.sin_port = htons(portno);
    
+   printf("bind\n");
    /* Now bind the host address using bind() call.*/
    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
       perror("ERROR on binding");
       exit(1);
    }
-   
+   printf("after bind\n");
    /* Now start listening for the clients, here
       * process will go in sleep mode and will wait
       * for the incoming connection
@@ -230,5 +231,6 @@ void openSocket(int port){
 }
 
 int main(int argc,char** argv ){
-	openSocket(PORT_NUM);
+	printf("server started\n");
+   openSocket(PORT_NUM);
 }
