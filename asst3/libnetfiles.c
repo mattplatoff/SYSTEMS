@@ -90,7 +90,7 @@ int netopen(const char* pathname, int flags){
    bzero(buffer,1024);
    int i;
    n = read(sockfd, buffer, 1023);
-
+   printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
@@ -102,6 +102,7 @@ int netopen(const char* pathname, int flags){
    strncpy(num,&buffer[6],i-6);
    num[i-5] = '\0';
    fdes = atoi(num);
+   printf("%d\n", fdes);
    if (fdes==-1){
       //change this to error message later
       perror("An Error has occoured");
@@ -151,9 +152,9 @@ void netread(int filedes, void* buf, size_t nbyte){
 	sprintf(size, "%zu:", nbyte);
 	strcpy(sendBuff, "NREAD:");
 	strcat(sendBuff, fdes);
-	strcar(sendBuff, size);
+	strcat(sendBuff, size);
 
-	n = write(sockfd,buffer,1024);
+	n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -169,9 +170,9 @@ void netread(int filedes, void* buf, size_t nbyte){
       exit(1);
    }
 
-   int i,j;
-   for(i=6,fromServer[i]!=':';i++);
-   for(j=i,fromServer[j]!=':';j++);
+   int j, i;
+   for(i=6;fromServer[i]!=':';i++);
+   for(j=i;fromServer[j]!=':';j++);
     
    if(fromServer[6]!='0')
    {
@@ -179,7 +180,8 @@ void netread(int filedes, void* buf, size_t nbyte){
    		return;
    }
 
-   strncpy(buf,&fromServer[j+1],nbyte);		
+   strncpy(buf,&fromServer[j+1],nbyte);
+   free(fromServer);		
 }
 
 int netclose(int fd){
@@ -222,7 +224,7 @@ int main(int argc, char const *argv[])
 {
    printf("client started attempting to connect on %s\n",argv[1]);
 	netserverinit(argv[1]);
-	netopen("test.txt",12341234);
+	netopen("test.txt",O_RDONLY);
 	return 0;
 }
 

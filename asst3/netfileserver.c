@@ -19,7 +19,7 @@ int lRead(char* buff, char* readTo){
 	int fdes, size, i, j, n;
 
 	for(i=6;buff[i]!=':';i++);
-	for(j=i;buff[j]!=':';j++;)
+	for(j=i;buff[j]!=':';j++);
 	char* fd = (char*)malloc(i-5);
 	char* s = (char*)malloc((j-i) + 1);
 	strncpy(fd, &buff[6], i-6);
@@ -48,10 +48,12 @@ int lopen(char * buff){
 	//pull params out of buffer 
 	for (i=6;buff[i]!=':';i++)
       ;
-	memcpy(path,&buff[6],i-5);
+	memcpy(path,&buff[6],i-6);
 	path[i-5] = '\0';
 	memcpy(flag,&buff[i+1],2);
 	flag[2] = '\0';
+	printf("%s\n",path);
+	printf("%s\n",flag);
 
 	if (!strncmp(flag,"r-",2)){
 		iflag=O_RDONLY;
@@ -135,7 +137,6 @@ void processConnection(int sockfd){
          fdes=lopen(buffer);
          //prepare to send back fdes, make up own fdes tho and store relationship.
          // as per program spec, fd on client side should be negative of fd on server side
-         fdes*=-1;
          char num[12];
          bzero(retBuff,1024);
          strcpy(retBuff,"NOPEN:");
@@ -173,8 +174,8 @@ void processConnection(int sockfd){
          lwrite(buffer);
       }
       else if (!strncmp(buffer,"NREAD",5)){
-      	char* readTo;
-      	int success = lread(buffer,readTo);
+      	char* readTo = NULL;
+      	int success = lRead(buffer,readTo);
 
       	char succ[4];
         sprintf(succ,"%d:",success);
@@ -268,4 +269,5 @@ void openSocket(int port){
 int main(int argc,char** argv ){
 	printf("server started\n");
    openSocket(PORT_NUM);
+   return 0;
 }
