@@ -89,7 +89,7 @@ int netopen(const char* pathname, int flags){
    char buffer[1024];
    bzero(buffer,1024);
    int i;
-   n = read(sockfd, buffer, 1023);
+   n = read(sockfd, buffer, 1024);
    printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
@@ -194,19 +194,16 @@ int netclose(int fd){
 	strcpy(sendBuff,"NCLOS:");
 	strcat(sendBuff,fdes);
 	strcat(sendBuff,":");
-
 	n = write(sockfd,sendBuff,1024);
-   
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
    }
-   
    /* Now read server response */
    char buffer[256];
    bzero(buffer,256);
    n = read(sockfd, buffer, 255);
-
+   printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
@@ -224,7 +221,8 @@ int main(int argc, char const *argv[])
 {
    printf("client started attempting to connect on %s\n",argv[1]);
 	netserverinit(argv[1]);
-	netopen("test.txt",O_RDONLY);
+	int fd = netopen("test.txt",O_RDONLY);
+	netclose(fd);
 	return 0;
 }
 
