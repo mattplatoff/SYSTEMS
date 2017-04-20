@@ -131,13 +131,24 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char buff[256];
-   bzero(buff,256);
-   n = read(sockfd, buff, 255);
-   
+   char fromServer[1024];
+   bzero(fromServer,1024);
+   n = read(sockfd, fromServer, 1024);
+   printf("%s\n",fromServer);
+
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
+   }
+
+   int j, i;
+   for(i=6;fromServer[i]!=':';i++);
+   for(j=i;fromServer[j]!=':';j++);
+    
+   if(fromServer[6]=='-')
+   {
+         perror("ERROR reading from file");
+         return;
    }
 }
 
@@ -161,7 +172,7 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char* fromServer = (char*)malloc(nbyte + 11);
+   char fromServer[nbyte + 11];
    n = read(sockfd, fromServer, nbyte+11);
    
    if (n < 0) {
@@ -170,7 +181,7 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
 
    int j, i;
-   printf("%s\n", fromServer);
+   printf("--%s\n", fromServer);
    for(i=6;fromServer[i]!=':';i++);
    for(j=i;fromServer[j]!=':';j++);
     
@@ -181,7 +192,6 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
 
    strncpy(buf,&fromServer[j+1],nbyte);
-   free(fromServer);    
 }
 
 int netclose(int fd){
@@ -222,9 +232,12 @@ int main(int argc, char const *argv[])
    printf("client started attempting to connect on %s\n",argv[1]);
    netserverinit(argv[1]);
    char* x = (char*)malloc(10);
-   int fd = netopen("test.txt",O_RDONLY);
-   netread(fd, x, 9);
+   char* y = (char*)malloc(10);
+   int fd = netopen("test.txt",O_RDWR);
+   netread(fd, x, 5);
    printf("Read from serv: %s\n",x);
+   netread(fd, y, 4);
+   printf("Read from serv: %s\n",y);
    netclose(fd);
    return 0;
 }
