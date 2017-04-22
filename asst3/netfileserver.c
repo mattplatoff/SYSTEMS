@@ -15,11 +15,11 @@
 
 
 
-int lRead(char* buff, char* readTo){
+int lread(char* buff, char* readTo){
 	int fdes, size, i, j, n;
 
 	for(i=6;buff[i]!=':';i++);
-	for(j=i;buff[j]!=':';j++;)
+	for(j=i;buff[j]!=':';j++);
 	char* fd = (char*)malloc(i-5);
 	char* s = (char*)malloc((j-i) + 1);
 	strncpy(fd, &buff[6], i-6);
@@ -173,7 +173,7 @@ void processConnection(int sockfd){
          lwrite(buffer);
       }
       else if (!strncmp(buffer,"NREAD",5)){
-      	char* readTo;
+      	char* readTo = (char*)malloc(1024*sizeof(char));
       	int success = lread(buffer,readTo);
 
       	char succ[4];

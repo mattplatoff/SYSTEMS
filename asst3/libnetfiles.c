@@ -151,9 +151,9 @@ void netread(int filedes, void* buf, size_t nbyte){
 	sprintf(size, "%zu:", nbyte);
 	strcpy(sendBuff, "NREAD:");
 	strcat(sendBuff, fdes);
-	strcar(sendBuff, size);
+	strcat(sendBuff, size);
 
-	n = write(sockfd,buffer,1024);
+	n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -170,8 +170,8 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
 
    int i,j;
-   for(i=6,fromServer[i]!=':';i++);
-   for(j=i,fromServer[j]!=':';j++);
+   for(i=6;fromServer[i]!=':';i++);
+   for(j=i;fromServer[j]!=':';j++);
     
    if(fromServer[6]!='0')
    {
