@@ -15,15 +15,14 @@
 
 #define PORT_NUM 8686
 
-
 int sockfd;
 
 int netserverinit(const char* hostname){
-	printf("net server init\n");
+   printf("net server init\n");
    int portno;
    struct sockaddr_in serv_addr;
    struct hostent *server;
-	
+   
    portno = PORT_NUM;
    
    /* Create a socket point */
@@ -33,7 +32,7 @@ int netserverinit(const char* hostname){
       perror("ERROR opening socket");
       exit(1);
    }
-	printf("sockfd = %d\n", sockfd);
+   printf("sockfd = %d\n", sockfd);
    server = gethostbyname(hostname);
    
    if (server == NULL) {
@@ -59,26 +58,26 @@ int netserverinit(const char* hostname){
 }
 
 int netopen(const char* pathname, int flags){
-	printf("net open called\n");
+   printf("net open called\n");
    int n,fdes;
-	char* flag;
-	if (flags == O_RDONLY){
-		flag="r-";
-	}
-	else if (flags == O_WRONLY){
-		flag="w-";
-	}
-	else if (flags == O_RDWR){
-		flag="rw";
-	}
-	char sendBuff[1024];
-	strcpy(sendBuff,"NOPEN:");
-	strcat(sendBuff,pathname);
-	strcat(sendBuff,":");
-	strcat(sendBuff,flag);
+   char* flag;
+   if (flags == O_RDONLY){
+      flag="r-";
+   }
+   else if (flags == O_WRONLY){
+      flag="w-";
+   }
+   else if (flags == O_RDWR){
+      flag="rw";
+   }
+   char sendBuff[1024];
+   strcpy(sendBuff,"NOPEN:");
+   strcat(sendBuff,pathname);
+   strcat(sendBuff,":");
+   strcat(sendBuff,flag);
 
-	n = write(sockfd,sendBuff,1024);
-   	
+   n = write(sockfd,sendBuff,1024);
+      
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
@@ -89,8 +88,8 @@ int netopen(const char* pathname, int flags){
    char buffer[1024];
    bzero(buffer,1024);
    int i;
-   n = read(sockfd, buffer, 1023);
-
+   n = read(sockfd, buffer, 1024);
+   printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
@@ -102,6 +101,7 @@ int netopen(const char* pathname, int flags){
    strncpy(num,&buffer[6],i-6);
    num[i-5] = '\0';
    fdes = atoi(num);
+   printf("%d\n", fdes);
    if (fdes==-1){
       //change this to error message later
       perror("An Error has occoured");
@@ -112,7 +112,7 @@ int netopen(const char* pathname, int flags){
 }
 
 void netwrite(int filedes, void* buf, size_t nbyte){
-	int n;
+   int n;
    char fdes[16];
    char size[16];
    char buffer[1024];
@@ -123,7 +123,7 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    strcat(buffer,size);
    strcat(buffer,buf);
 
-	n = write(sockfd,buffer,1024);
+   n = write(sockfd,buffer,1024);
    
    if (n < 0) {
       perror("ERROR writing to socket");
@@ -131,13 +131,24 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char buff[256];
-   bzero(buff,256);
-   n = read(sockfd, buff, 255);
-   
+   char fromServer[1024];
+   bzero(fromServer,1024);
+   n = read(sockfd, fromServer, 1024);
+   printf("%s\n",fromServer);
+
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
+   }
+
+   int j, i;
+   for(i=6;fromServer[i]!=':';i++);
+   for(j=i;fromServer[j]!=':';j++);
+    
+   if(fromServer[6]=='-')
+   {
+         perror("ERROR reading from file");
+         return;
    }
 }
 
@@ -156,55 +167,52 @@ void netread(int filedes, void* buf, size_t nbyte){
 	n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
-      perror("ERROR writing to socket");
+      perror("1ERROR writing to socket");
       exit(1);
    }
    
    /* Now read server response */
-   char* fromServer = (char*)malloc(nbyte + 11);
+   char fromServer[nbyte + 11];
    n = read(sockfd, fromServer, nbyte+11);
    
    if (n < 0) {
-      perror("ERROR reading from socket");
+      perror("1ERROR reading from socket");
       exit(1);
    }
-
    int i,j;
+
    for(i=6;fromServer[i]!=':';i++);
    for(j=i;fromServer[j]!=':';j++);
     
-   if(fromServer[6]!='0')
+   if(fromServer[6]=='-')
    {
-   		perror("ERROR reading from file");
-   		return;
+         perror("ERROR reading from file");
+         return;
    }
 
-   strncpy(buf,&fromServer[j+1],nbyte);		
+   strncpy(buf,&fromServer[j+1],nbyte);
 }
 
 int netclose(int fd){
-	int n;
+   int n;
 
-	char fdes[12];
-	sprintf(fdes,"%d",fd);
+   char fdes[12];
+   sprintf(fdes,"%d",fd);
 
-	char sendBuff[1024];
-	strcpy(sendBuff,"NCLOS:");
-	strcat(sendBuff,fdes);
-	strcat(sendBuff,":");
-
-	n = write(sockfd,sendBuff,1024);
-   
+   char sendBuff[1024];
+   strcpy(sendBuff,"NCLOS:");
+   strcat(sendBuff,fdes);
+   strcat(sendBuff,":");
+   n = write(sockfd,sendBuff,1024);
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
    }
-   
    /* Now read server response */
    char buffer[256];
    bzero(buffer,256);
    n = read(sockfd, buffer, 255);
-
+   printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
@@ -221,8 +229,15 @@ int netclose(int fd){
 int main(int argc, char const *argv[])
 {
    printf("client started attempting to connect on %s\n",argv[1]);
-	netserverinit(argv[1]);
-	netopen("test.txt",12341234);
-	return 0;
+   netserverinit(argv[1]);
+   char* x = (char*)malloc(10);
+   char* y = (char*)malloc(10);
+   int fd = netopen("test.txt",O_RDWR);
+   netread(fd, x, 5);
+   printf("Read from serv: %s\n",x);
+   netread(fd, y, 4);
+   printf("Read from serv: %s\n",y);
+   netclose(fd);
+   return 0;
 }
 

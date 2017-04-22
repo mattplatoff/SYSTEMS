@@ -10,6 +10,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define PORT_NUM 8686
 
@@ -40,57 +41,59 @@ int lread(char* buff, char* readTo){
 }
 
 int lopen(char * buff){
-	printf("local open\n");
-	char path[1024];
-	char flag[3];
-	int i, iflag, fdes, networkfdes;
+  printf("local open\n");
+  char path[1024];
+  char flag[3];
+  int i, iflag, fdes, networkfdes;
 
-	//pull params out of buffer 
-	for (i=6;buff[i]!=':';i++)
+  //pull params out of buffer 
+  for (i=6;buff[i]!=':';i++)
       ;
-	memcpy(path,&buff[6],i-5);
-	path[i-5] = '\0';
-	memcpy(flag,&buff[i+1],2);
-	flag[2] = '\0';
+  memcpy(path,&buff[6],i-6);
+  path[i-5] = '\0';
+  memcpy(flag,&buff[i+1],2);
+  flag[2] = '\0';
+  printf("%s\n",path);
+  printf("%s\n",flag);
 
-	if (!strncmp(flag,"r-",2)){
-		iflag=O_RDONLY;
-	}
-	else if (!strncmp(flag,"w-",2)){
-		iflag = O_WRONLY;
-	}
-	else if(!strncmp(flag,"rw",2)){
-		iflag = O_RDWR;
-	}
+  if (!strncmp(flag,"r-",2)){
+    iflag=O_RDONLY;
+  }
+  else if (!strncmp(flag,"w-",2)){
+    iflag = O_WRONLY;
+  }
+  else if(!strncmp(flag,"rw",2)){
+    iflag = O_RDWR;
+  }
    else{
       iflag=0;
    }
-	//open file and return file discriptor 
-	fdes = open(path, iflag);
+  //open file and return file discriptor 
+  fdes = open(path, iflag);
    networkfdes = fdes*-1;
 
-	return networkfdes;
+  return networkfdes;
 }
 
 int lclose(char* buff){
-	printf("local close\n");
-	int i, fdes, n;
+  printf("local close\n");
+  int i, fdes, n;
 
-	for(i = 6; buff[i]!=':'; i++)
-      ;
-   	char* num = (char*)malloc(i-5);
-   	strncpy(num,&buff[6],i-6);
-   	num[i-5] = '\0';
-   	fdes = atoi(num) * -1;
-   	free(num);
+  for(i = 6; buff[i]!=':'; i++);
+    char* num = (char*)malloc(i-5);
+    strncpy(num,&buff[6],i-6);
+    num[i-5] = '\0';
+    fdes = atoi(num) * -1;
+    free(num);
 
-   	n = close(fdes);
+    n = close(fdes);
+    printf("%d\n",n);
 
-	return n;
+  return n;
 }
 
 int lwrite(const char *buff){
-	char fdes[16];
+  char fdes[16];
    char size [16];
    char message[1024];
    int fdesc,wsize;
@@ -113,18 +116,16 @@ int lwrite(const char *buff){
 
 void processConnection(int sockfd){
    printf("connection established\n");
-   int n;
+   int n, end = 0;
       char buffer[1024];
       char retBuff[1024];
 
-      bzero(buffer,1024);
-      n = read(sockfd,buffer,1023);
+      while(end == 0)
+      {
+        bzero(buffer,1024);
+        n = read(sockfd,buffer,1023);
    
-      if (n < 0) {
-      perror("ERROR reading from socket");
-      exit(1);
-      }
-   
+
       printf("message recieved: %s\n",buffer);
 
       if (!strncmp(buffer,"NOPEN",5)){
@@ -185,24 +186,83 @@ void processConnection(int sockfd){
       	//write back to client
       	n = write(sockfd,sendToClient, strlen(sendToClient));
         if (n < 0) {
-         perror("ERROR writing to socket");
-         exit(1);
-        } 
-        free(sendToClient);
-        free(readTo);   	
-      }
-
-      n = write(sockfd,"I got your message",18);
+       perror("ERROR reading from socket");
+       exit(1);
+       }
    
-      if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(1);
+        printf("message recieved: %s\n",buffer);
+
+        if (!strncmp(buffer,"NOPEN",5)){
+           printf("NOPEN\n");
+           //get local file descriptor, should then save this and send back dummy file descriptor? and keep relationship
+           int fdes = -1;
+           //pass in buffer from client and open with params 
+          fdes=lopen(buffer);
+          //prepare to send back fdes, make up own fdes tho and store relationship.
+          // as per program spec, fd on client side should be negative of fd on server side
+          char num[12];
+          bzero(retBuff,1024);
+          strcpy(retBuff,"NOPEN:");
+          sprintf(num,"%d",fdes);
+          strcat(retBuff,num);
+          strcat(retBuff,":");
+
+           //write back to client
+          n = write(sockfd,retBuff,1024);
+           if (n < 0) {
+           perror("ERROR writing to socket");
+          exit(1);
+          }
+       }
+
+        else if (!strncmp(buffer,"NCLOS",5)){
+           printf("NCLOS\n");
+
+          //0 if success, -1 if failure
+          int success = lclose(buffer);
+          char succ[4];
+          bzero(retBuff,1024);
+          strcpy(retBuff,"NCLOS:");
+          sprintf(succ,"%d:",success);
+          strcat(retBuff,succ);
+
+          //write back to client
+          n = write(sockfd,retBuff,1024);
+          if (n < 0) {
+            perror("ERROR writing to socket");
+            exit(1);
+          }
+          end = 1;
+        }
+        else if (!strncmp(buffer,"NWRIT",5)){
+           lwrite(buffer);
+        }
+        else if (!strncmp(buffer,"NREAD",5)){
+          puts("hi");
+          char readTo[1024];
+          int success = lRead(buffer,readTo);
+          char succ[4];
+          sprintf(succ,"%d:",success);
+          char sendToClient[strlen(readTo)+strlen(succ)+7];
+                           puts("fiiif");
+
+          strcpy(sendToClient,"NREAD:");
+          strcat(sendToClient,succ);
+          strcat(sendToClient,readTo);
+          //write back to client
+          n = write(sockfd,sendToClient, strlen(sendToClient));
+          if (n < 0) {
+            perror("ERROR writing to socket");
+            exit(1);
+          } 
+        }
+
       }
 }
 
 void openSocket(int port){
-	printf("open socket\n");
-	int sockfd, newsockfd, portno, clilen;
+  printf("open socket\n");
+  int sockfd, newsockfd, portno, clilen;
    struct sockaddr_in serv_addr, cli_addr;
    int pid;
    
@@ -238,7 +298,7 @@ void openSocket(int port){
    
    while (1) {
       newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, (socklen_t *)&clilen);
-		
+    
       if (newsockfd < 0) {
          perror("ERROR on accept");
          exit(1);
@@ -246,7 +306,7 @@ void openSocket(int port){
       
       /* Create child process */
       pid = fork();
-		
+    
       if (pid < 0) {
          perror("ERROR on fork");
          exit(1);
@@ -261,11 +321,12 @@ void openSocket(int port){
       else {
          close(newsockfd);
       }
-		
+    
    } /* end of while */
 }
 
 int main(int argc,char** argv ){
-	printf("server started\n");
+  printf("server started\n");
    openSocket(PORT_NUM);
+   return 0;
 }
