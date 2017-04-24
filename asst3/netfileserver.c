@@ -16,27 +16,22 @@
 
 
 
-int lread(char* buff, char* readTo){
-	int fdes, size, i, j, n;
+int lRead(char* buff, char* readTo, int size){
+  int fdes, i, j, n;
+  for(i=6;buff[i]!=':';i++);
+    i++;
+  for(j=i;buff[j]!=':';j++);
+  char* fd = (char*)malloc(i-5);
+  printf("--%s,%d\n",buff,i);
+  strncpy(fd, &buff[6], i-6);
+  fd[i-5] = '\0';
+  fdes = atoi(fd)*-1;
+  free(fd);
 
-	for(i=6;buff[i]!=':';i++);
-	for(j=i;buff[j]!=':';j++);
-	char* fd = (char*)malloc(i-5);
-	char* s = (char*)malloc((j-i) + 1);
-	strncpy(fd, &buff[6], i-6);
-	strncpy(s, &buff[i], j-i);
-	fd[i-5] = '\0';
-	s[(j-i)+1] = '\0';
-	fdes = atoi(fd)*-1;
-	size = atoi(s) + 1;
-	free(fd);
-	free(s);
+  n = read(fdes, readTo, size);
+  readTo[size] = '\0';
 
-	readTo = (char*)malloc(size);
-	n = read(fdes, readTo, size);
-	readTo[size] = '\0';
-
-	return n;
+  return n;
 
 }
 
@@ -98,18 +93,20 @@ int lwrite(const char *buff){
    char message[1024];
    int fdesc,wsize;
    int i,j,ret;
-   for (i=6;buff[i]!=':';i++)
-      ;
-      strncpy(fdes,&buff[i],i-6);
-   for (j=i+1;buff[j]!=':';j++)
-      ;
-      strncpy(size,&buff[i],j-i);
-   wsize = atoi(size);
+   for (i=6;buff[i]!=':';i++);
+   i++;
+   strncpy(fdes,&buff[6],i-6);
    fdesc=atoi(fdes);
+   for (j=i;buff[j]!=':';j++);
+   strncpy(size,&buff[i],j-i);
+   wsize = atoi(size);
    fdesc*=-1;
-   strncpy(message,&buff[j+1],wsize);
-   ret = write(fdesc,message,wsize);
+   strcpy(message,&buff[j+1]);
+      printf("fdes: %d\n",fdesc);
 
+   ret = write(fdesc,message,wsize);
+   printf("%d\n",ret);
+   perror("hi");
 
    return ret;
 }
@@ -123,68 +120,8 @@ void processConnection(int sockfd){
       while(end == 0)
       {
         bzero(buffer,1024);
-        n = read(sockfd,buffer,1023);
+        n = read(sockfd,buffer,1024);
    
-
-      printf("message recieved: %s\n",buffer);
-
-      if (!strncmp(buffer,"NOPEN",5)){
-         printf("NOPEN\n");
-         //get local file descriptor, should then save this and send back dummy file descriptor? and keep relationship
-         int fdes = -1;
-         //pass in buffer from client and open with params 
-         fdes=lopen(buffer);
-         //prepare to send back fdes, make up own fdes tho and store relationship.
-         // as per program spec, fd on client side should be negative of fd on server side
-         fdes*=-1;
-         char num[12];
-         bzero(retBuff,1024);
-         strcpy(retBuff,"NOPEN:");
-         sprintf(num,"%d",fdes);
-         strcat(retBuff,num);
-         strcat(retBuff,":");
-
-         //write back to client
-         n = write(sockfd,retBuff,1024);
-         if (n < 0) {
-         perror("ERROR writing to socket");
-         exit(1);
-         }
-      }
-
-      else if (!strncmp(buffer,"NCLOS",5)){
-         printf("NCLOS\n");
-
-         //0 if success, -1 if failure
-         int success = lclose(buffer);
-         char succ[4];
-         bzero(retBuff,1024);
-         strcpy(retBuff,"NCLOS:");
-         sprintf(succ,"%d:",success);
-         strcat(retBuff,succ);
-
-         //write back to client
-         n = write(sockfd,retBuff,1024);
-         if (n < 0) {
-         perror("ERROR writing to socket");
-         exit(1);
-         }
-      }
-      else if (!strncmp(buffer,"NWRIT",5)){
-         lwrite(buffer);
-      }
-      else if (!strncmp(buffer,"NREAD",5)){
-      	char* readTo = (char*)malloc(1024*sizeof(char));
-      	int success = lread(buffer,readTo);
-
-      	char succ[4];
-        sprintf(succ,"%d:",success);
-        char* sendToClient = (char*)malloc(strlen(readTo) + strlen(succ) + 7);
-        strcpy(sendToClient,"NREAD:");
-        strcat(sendToClient,succ);
-        strcat(sendToClient,readTo);
-      	//write back to client
-      	n = write(sockfd,sendToClient, strlen(sendToClient));
         if (n < 0) {
        perror("ERROR reading from socket");
        exit(1);
@@ -225,9 +162,9 @@ void processConnection(int sockfd){
           strcpy(retBuff,"NCLOS:");
           sprintf(succ,"%d:",success);
           strcat(retBuff,succ);
-
           //write back to client
           n = write(sockfd,retBuff,1024);
+          printf("%s\n", retBuff);
           if (n < 0) {
             perror("ERROR writing to socket");
             exit(1);
@@ -235,26 +172,47 @@ void processConnection(int sockfd){
           end = 1;
         }
         else if (!strncmp(buffer,"NWRIT",5)){
-           lwrite(buffer);
-        }
-        else if (!strncmp(buffer,"NREAD",5)){
-          puts("hi");
-          char readTo[1024];
-          int success = lRead(buffer,readTo);
+          printf("NWRIT\n");
+          int success = lwrite(buffer);
           char succ[4];
+          bzero(retBuff,1024);
+          strcpy(retBuff,"NWRIT:");
           sprintf(succ,"%d:",success);
-          char sendToClient[strlen(readTo)+strlen(succ)+7];
-                           puts("fiiif");
+          strcat(retBuff,succ);
 
-          strcpy(sendToClient,"NREAD:");
-          strcat(sendToClient,succ);
-          strcat(sendToClient,readTo);
-          //write back to client
-          n = write(sockfd,sendToClient, strlen(sendToClient));
+          n = write(sockfd,retBuff,1024);
           if (n < 0) {
             perror("ERROR writing to socket");
             exit(1);
-          } 
+          }
+        }
+        else if (!strncmp(buffer,"NREAD",5)){
+          int size, i, j;
+          for(i=6;buffer[i]!=':';i++);
+          i++;
+          for(j=i;buffer[j]!=':';j++);
+          char* s = (char*)malloc((j-i) + 1);
+          strncpy(s, &buffer[i], j-i);
+          s[(j-i)+1] = '\0';
+          size = atoi(s);
+
+          char* readTo = (char*)malloc(size + 1);
+          int success = lRead(buffer,readTo, size);
+          char succ[4];
+          sprintf(succ,"%d:",success);
+          char sendToClient[strlen(readTo)+strlen(succ)+7];
+          strcpy(sendToClient,"NREAD:");
+          strcat(sendToClient,succ);
+          if(success != 0) strcat(sendToClient,readTo);
+          //write back to client
+          n = write(sockfd,sendToClient, strlen(sendToClient)+1);
+          if (n < 0) {
+            perror("ERROR writing to socket");
+            exit(1);
+          }
+
+          free(readTo);
+          free(s);
         }
 
       }

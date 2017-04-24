@@ -113,15 +113,23 @@ int netopen(const char* pathname, int flags){
 
 void netwrite(int filedes, void* buf, size_t nbyte){
    int n;
+   int nb = (int)nbyte;
+   int z = 0;
    char fdes[16];
    char size[16];
-   char buffer[1024];
    sprintf(fdes,"%d:",filedes);
-   sprintf(size,"%zu:",nbyte);
+
+   while(nb > 0)
+   {
+      if(nb > 900) strcpy(size,"900:");
+      else sprintf(size,"%d:",nb);
+   char buffer[1024];
+
    strcpy(buffer,"NWRIT:");
    strcat(buffer,fdes);
    strcat(buffer,size);
-   strcat(buffer,buf);
+   strncat(buffer,buf + z,900);
+   printf("%s\n",buffer);
 
    n = write(sockfd,buffer,1024);
    
@@ -129,6 +137,11 @@ void netwrite(int filedes, void* buf, size_t nbyte){
       perror("ERROR writing to socket");
       exit(1);
    }
+
+   nb -= 900;
+   z += 900; 
+   bzero(buffer, 1024);
+   
    
    /* Now read server response */
    char fromServer[1024];
@@ -150,21 +163,22 @@ void netwrite(int filedes, void* buf, size_t nbyte){
          perror("ERROR reading from file");
          return;
    }
+   }
 }
 
 void netread(int filedes, void* buf, size_t nbyte){
-	int n;
-	char fdes[16];
-	char size[16];
-	char sendBuff[1024];
+   int n;
+   char fdes[16];
+   char size[16];
+   char sendBuff[1024];
 
-	sprintf(fdes, "%d:", filedes);
-	sprintf(size, "%zu:", nbyte);
-	strcpy(sendBuff, "NREAD:");
-	strcat(sendBuff, fdes);
-	strcat(sendBuff, size);
-
-	n = write(sockfd,sendBuff,1024);
+   sprintf(fdes, "%d:", filedes);
+   sprintf(size, "%zu:", nbyte);
+   strcpy(sendBuff, "NREAD:");
+   strcat(sendBuff, fdes);
+   strcat(sendBuff, size);
+   printf("%s\n",sendBuff);
+   n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
       perror("1ERROR writing to socket");
@@ -172,15 +186,15 @@ void netread(int filedes, void* buf, size_t nbyte){
    }
    
    /* Now read server response */
-   char fromServer[nbyte + 11];
-   n = read(sockfd, fromServer, nbyte+11);
-   
+   char fromServer[nbyte + strlen(size)+7];
+   n = read(sockfd, fromServer, nbyte+strlen(size)+7);
+
    if (n < 0) {
       perror("1ERROR reading from socket");
       exit(1);
    }
-   int i,j;
 
+   int j, i;
    for(i=6;fromServer[i]!=':';i++);
    for(j=i;fromServer[j]!=':';j++);
     
@@ -190,7 +204,7 @@ void netread(int filedes, void* buf, size_t nbyte){
          return;
    }
 
-   strncpy(buf,&fromServer[j+1],nbyte);
+   if(fromServer[6] != '0') strncpy(buf,&fromServer[j+1],nbyte);
 }
 
 int netclose(int fd){
@@ -211,13 +225,13 @@ int netclose(int fd){
    /* Now read server response */
    char buffer[256];
    bzero(buffer,256);
-   n = read(sockfd, buffer, 255);
+   n = read(sockfd, buffer, 256);
    printf("%s\n",buffer);
    if (n < 0) {
       perror("ERROR reading from socket");
       exit(1);
    }
-
+   printf("-%c\n", buffer[6]);
    if (buffer[6]!='0'){
       perror("Error closing file");
    }
@@ -230,14 +244,13 @@ int main(int argc, char const *argv[])
 {
    printf("client started attempting to connect on %s\n",argv[1]);
    netserverinit(argv[1]);
-   char* x = (char*)malloc(10);
-   char* y = (char*)malloc(10);
-   int fd = netopen("test.txt",O_RDWR);
-   netread(fd, x, 5);
-   printf("Read from serv: %s\n",x);
-   netread(fd, y, 4);
-   printf("Read from serv: %s\n",y);
+   //char* x = "qRCHVKQ2BQKRFLzRIy9VFxiKYFyWxIifa6uhnijIsBzkkFBv4WCVnW8YgZUsTMffE4whyvOEQa65iAlBpViXMSA3HruAq9QqeO15hevhyO2hu31hlxynnnpprj1yJkbt81GHcSUXNKkya2vtUkLvk6obQVtwHxYmHe9eACXpvQ0N3IMczNVQ0gDt39oAPicYYcHoPUT07UOWEoScYve1BVujDPITbYABNSvgPVrUNtUlASNRzTfNZZVytqByASzD93np2fQkoZjLlEUDYhsUW7zOKTpBzzfPRqPt1tyzsn08GUb1ggRK3hMzKEVETYBMGHiMfYOPwifKLQygRKuh7N31vJEUUmkykBALmMSTuh4VIp0LPrjWILxloJXS2GHqNI3f6E5a5Tt1XhkTX7PwJWjNecfkmtGGI9MDwFQAK1titlXt7DyTrYJhvp3S0hZHljfEWPckprQkS6GqgwGwNMDKBcZW9vgQS3e9FZo2IS2NApS5ZEYJRySohlb61Qm8LLW5BIwXGrCTtFLL6zupCHV7a5Zkx64u1l1Opjb703DCwj3aQUOumRT5u341wPrJNH9q71Bamnzaa5W5sFuBqX7fGgqkXoJRYrbL8BOVhsl1EbEwF8zTPaA1uRwIG3Bwn3tJe6zfPS4Xm9PhRRxEiXfqcWWlTVJIcsGffRMeUj0JT9F3JgzJgIbDLGxyjK8xvhli5OjVjyupfPgHmcWiZUIvPaZ0FSh9DKvPNNK0p58oV0nq5hIUh5ykz6QtjOtFhph0nh6DZs9WuwIPNJk1YSFgeCvLkTHRRWP4MXWWCKt3noT4jChWBLuerJPVLhQvi9P3U5wMMPX79ECMwx0pwrmsS6zVIRzEVmIuLSf9XT09tGzKjviHHaQgWSSewW58sbwyua9ZeYsFcf1Ay8uVeQ5XzqwSXT36WiQr61Cq2rRZshcmGwKyNghuGSn6glEC76AONo2f3XKg52RjARanDa9iyz3pmOImlkX9DtZzV0YgxpQk04ZS2xtqx01TYCMPmJ7D3BouvuYhggPYl3oL0IV5PqN7vHpIeq982kcFJ1NXwUI4ZRpMG2v2DgPGruOhfx5M6Qs9YAYY";
+   char* y = malloc(1026);
+   int fd = netopen("file.txt",O_RDWR);
+   netread(fd, y, 10);
+   printf("%s\n", y);
    netclose(fd);
+   
    return 0;
 }
 
