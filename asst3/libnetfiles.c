@@ -16,11 +16,11 @@
 #define PORT_NUM 8686
 
 int sockfd;
+struct sockaddr_in serv_addr;
 
 int netserverinit(const char* hostname){
    printf("net server init\n");
    int portno;
-   struct sockaddr_in serv_addr;
    struct hostent *server;
    
    portno = PORT_NUM;
@@ -47,11 +47,6 @@ int netserverinit(const char* hostname){
    serv_addr.sin_port = htons(portno);
    printf("set server params\n");
    /* Now connect to the server */
-   
-   if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-      perror("ERROR connecting");
-      exit(1);
-   }
 
    printf("exit net server init\n");
    return 0;
@@ -61,6 +56,13 @@ int netopen(const char* pathname, int flags){
    printf("net open called\n");
    int n,fdes;
    char* flag;
+
+   if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0)
+   {
+      perror("ERROR connecting");
+      exit(1);
+   }
+
    if (flags == O_RDONLY){
       flag="r-";
    }
