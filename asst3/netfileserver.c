@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -111,14 +112,16 @@ int lwrite(const char *buff){
    return ret;
 }
 
-void processConnection(int sockfd){
+void* processConnection(void* fd){
+
+   int sockfd = *(int*)fd;
    printf("connection established\n");
-   int n, end = 0;
+   int n; //,end = 0;
       char buffer[1024];
       char retBuff[1024];
 
-      while(end == 0)
-      {
+      //while(end == 0)
+      //{
         bzero(buffer,1024);
         n = read(sockfd,buffer,1024);
    
@@ -169,7 +172,7 @@ void processConnection(int sockfd){
             perror("ERROR writing to socket");
             exit(1);
           }
-          end = 1;
+          //end = 1;
         }
         else if (!strncmp(buffer,"NWRIT",5)){
           printf("NWRIT\n");
@@ -215,14 +218,15 @@ void processConnection(int sockfd){
           free(s);
         }
 
-      }
+      //}
+      close(sockfd);  
+      return NULL;
 }
 
 void openSocket(int port){
   printf("open socket\n");
   int sockfd, newsockfd, portno, clilen;
    struct sockaddr_in serv_addr, cli_addr;
-   int pid;
    
    /* First call to socket() function */
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -231,6 +235,9 @@ void openSocket(int port){
       perror("ERROR opening socket");
       exit(1);
    }
+
+   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0)
+    perror("setsockopt(SO_REUSEADDR) failed");
    
    /* Initialize socket structure */
    bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -255,14 +262,40 @@ void openSocket(int port){
    clilen = sizeof(cli_addr);
    
    while (1) {
+      int* sockptr = malloc(sizeof(int));
+      puts("test");
       newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, (socklen_t *)&clilen);
+
+      if (newsockfd < 0) {
+         perror("ERROR on accept");
+         exit(1);
+      }
+
+      *sockptr = newsockfd;
+      pthread_t thread0;  
+      void* (*procCon)(void*) = processConnection;
+
+      int err = pthread_create(&thread0, NULL, procCon, (void*) sockptr);
+      if(err != 0)
+      {
+        perror("ERROR on thread creation");
+        exit(1);
+      }
+
+      pthread_detach(thread0);
+      //close(newsockfd);
+
+    }
+
+    close(sockfd);
+    /*
     
       if (newsockfd < 0) {
          perror("ERROR on accept");
          exit(1);
       }
       
-      /* Create child process */
+      // Create child process 
       pid = fork();
     
       if (pid < 0) {
@@ -271,7 +304,7 @@ void openSocket(int port){
       }
       
       if (pid == 0) {
-         /* This is the client process */
+         // This is the client process 
          close(sockfd);
          processConnection(newsockfd);
          exit(0);
@@ -279,8 +312,7 @@ void openSocket(int port){
       else {
          close(newsockfd);
       }
-    
-   } /* end of while */
+    */
 }
 
 int main(int argc,char** argv ){
