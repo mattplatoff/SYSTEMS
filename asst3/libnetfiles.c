@@ -115,9 +115,11 @@ int netopen(const char* pathname, int flags){
    num[i-5] = '\0';
    fdes = atoi(num);
    printf("%d\n", fdes);
-   if (fdes==1){
+   if (fdes > 0){
       //change this to error message later
+      errno = fdes;
       perror("An Error has occoured");
+      return -1;
    }
    free(num);
    
@@ -125,9 +127,10 @@ int netopen(const char* pathname, int flags){
    return fdes;
 }
 
-void netwrite(int filedes, void* buf, size_t nbyte){
+int netwrite(int filedes, void* buf, size_t nbyte){
 
    int n;
+   int wroteIn = 0;
    int nb = (int)nbyte;
    int z = 0;
    char fdes[16];
@@ -181,19 +184,34 @@ void netwrite(int filedes, void* buf, size_t nbyte){
    int j, i;
    for(i=6;fromServer[i]!=':';i++);
    for(j=i;fromServer[j]!=':';j++);
-    
+   
    if(fromServer[6]=='-')
    {
-         perror("ERROR reading from file");
-         return;
+      char temp[5];
+      strncpy(temp,&fromServer[7],i-7);
+      temp[i-7] = '\0';
+      errno = atoi(temp);
+      perror("ERROR reading from file");
+      return -1;
+   }
+   else
+   {
+      char temp[5];
+      strncpy(temp,&fromServer[6],i-6);
+      temp[i-6] = '\0';
+      wroteIn += atoi(temp);
    }
 
    close(sockfd);
    }
 
+   return wroteIn;
+
 }
 
-void netread(int filedes, void* buf, size_t nbyte){
+int netread(int filedes, void* buf, size_t nbyte){
+
+   int readIn;
 
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -217,7 +235,7 @@ void netread(int filedes, void* buf, size_t nbyte){
    n = write(sockfd,sendBuff,1024);
    
    if (n < 0) {
-      perror("1ERROR writing to socket");
+      perror("ERROR writing to socket");
       exit(1);
    }
    
@@ -226,7 +244,7 @@ void netread(int filedes, void* buf, size_t nbyte){
    n = read(sockfd, fromServer, nbyte+strlen(size)+7);
 
    if (n < 0) {
-      perror("1ERROR reading from socket");
+      perror("ERROR reading from socket");
       exit(1);
    }
 
@@ -234,15 +252,28 @@ void netread(int filedes, void* buf, size_t nbyte){
    for(i=6;fromServer[i]!=':';i++);
    for(j=i;fromServer[j]!=':';j++);
     
-   if(fromServer[6]=='-')
+   if(fromServer[6]!='-')
    {
-         perror("ERROR reading from file");
-         return;
+      char temp[5];
+      strncpy(temp,&fromServer[7],i-7);
+      temp[i-7] = '\0';
+      errno = atoi(temp);
+      perror("ERROR reading from file");
+      return -1;
+   }
+   else
+   {
+      char temp[5];
+      strncpy(temp,&fromServer[6],i-6);
+      temp[i-6] = '\0';
+      readIn = atoi(temp);
    }
 
    if(fromServer[6] != '0') strncpy(buf,&fromServer[j+1],nbyte);
 
    close(sockfd);
+
+   return readIn;
 }
 
 int netclose(int fd){
@@ -279,8 +310,16 @@ int netclose(int fd){
       exit(1);
    }
 
+   int i;
+   for(i=6;buffer[i]!=':';i++);
+
    if (buffer[6]!='0'){
+      char temp[5];
+      strncpy(temp,&buffer[6],i-6);
+      temp[i-6] = '\0';
+      errno = atoi(temp);
       perror("Error closing file");
+      return -1;
    }
 
    close(sockfd);

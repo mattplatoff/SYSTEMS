@@ -120,8 +120,7 @@ void* processConnection(void* fd){
       char buffer[1024];
       char retBuff[1024];
 
-      //while(end == 0)
-      //{
+
         bzero(buffer,1024);
         n = read(sockfd,buffer,1024);
    
@@ -143,10 +142,13 @@ void* processConnection(void* fd){
           char num[12];
           bzero(retBuff,1024);
           strcpy(retBuff,"NOPEN:");
-          sprintf(num,"%d",fdes);
+          printf("hhhhh %d\n", fdes);
+          if(fdes < 0) sprintf(num,"%d",fdes);
+          else sprintf(num,"%d",errno);
           strcat(retBuff,num);
           strcat(retBuff,":");
 
+          printf("%s\n",retBuff);
            //write back to client
           n = write(sockfd,retBuff,1024);
            if (n < 0) {
@@ -160,10 +162,11 @@ void* processConnection(void* fd){
 
           //0 if success, -1 if failure
           int success = lclose(buffer);
-          char succ[4];
+          char succ[8];
           bzero(retBuff,1024);
           strcpy(retBuff,"NCLOS:");
-          sprintf(succ,"%d:",success);
+          if(success == 0) sprintf(succ,"%d:",success);
+          else sprintf(succ,"%d:",errno);
           strcat(retBuff,succ);
           //write back to client
           n = write(sockfd,retBuff,1024);
@@ -172,15 +175,15 @@ void* processConnection(void* fd){
             perror("ERROR writing to socket");
             exit(1);
           }
-          //end = 1;
         }
         else if (!strncmp(buffer,"NWRIT",5)){
           printf("NWRIT\n");
           int success = lwrite(buffer);
-          char succ[4];
+          char succ[8];
           bzero(retBuff,1024);
           strcpy(retBuff,"NWRIT:");
-          sprintf(succ,"%d:",success);
+          if (success >= 0) sprintf(succ,"%d:",success);
+          else sprintf(succ,"-%d:",errno);
           strcat(retBuff,succ);
 
           n = write(sockfd,retBuff,1024);
@@ -201,12 +204,13 @@ void* processConnection(void* fd){
 
           char* readTo = (char*)malloc(size + 1);
           int success = lRead(buffer,readTo, size);
-          char succ[4];
-          sprintf(succ,"%d:",success);
+          char succ[8];
+          if(success >= 0) sprintf(succ,"%d:",success);
+          else sprintf(succ,"-%d:",errno);
           char sendToClient[strlen(readTo)+strlen(succ)+7];
           strcpy(sendToClient,"NREAD:");
           strcat(sendToClient,succ);
-          if(success != 0) strcat(sendToClient,readTo);
+          if(success > 0) strcat(sendToClient,readTo);
           //write back to client
           n = write(sockfd,sendToClient, strlen(sendToClient)+1);
           if (n < 0) {
@@ -218,7 +222,6 @@ void* processConnection(void* fd){
           free(s);
         }
 
-      //}
       close(sockfd);  
       return NULL;
 }
