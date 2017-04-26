@@ -12,10 +12,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-
 #define PORT_NUM 8686
+#define UNRESTRICTED 0
+#define EXCLUSIVE 1
+#define TRANSACTION 2
+#define INVALID_FILE_MODE 4
 
 int sockfd;
+int openMode;
 struct sockaddr_in serv_addr;
 
 typedef struct fdNode
@@ -27,13 +31,19 @@ typedef struct fdNode
 
 fdNode * head = NULL;
 
-int netserverinit(const char* hostname){
+int netserverinit(const char* hostname, int oM){
    printf("net server init\n");
    int portno;
    struct hostent *server;
    
    portno = PORT_NUM;
    
+   if(oM <= 2 && oM >= 0) openMode = oM;
+   else
+   {
+      h_errno = INVALID_FILE_MODE;
+      return -1;
+   }   
    /* Create a socket point */
    sockfd = socket(AF_INET, SOCK_STREAM, 0);
    
@@ -45,7 +55,7 @@ int netserverinit(const char* hostname){
    server = gethostbyname(hostname);
    
    if (server == NULL) {
-      herror("ERROR, no such host\n");
+      herror("ERROR, no such host");
       return -1;
    }
 
@@ -88,6 +98,10 @@ int netopen(const char* pathname, int flags){
    strcat(sendBuff,pathname);
    strcat(sendBuff,":");
    strcat(sendBuff,flag);
+
+   char temp[3];
+   sprintf(temp, ":%d", openMode);
+   strcat(sendBuff, temp);
 
    n = write(sockfd,sendBuff,1024);
       
@@ -148,14 +162,15 @@ int netwrite(int filedes, void* buf, size_t nbyte){
       exit(1);
    }
 
-   if(nb > 900) strcpy(size,"900:");
+   if(nb > 900) strcpy(size,"900:"); 
    else sprintf(size,"%d:",nb);
    char buffer[1024];
 
    strcpy(buffer,"NWRIT:");
    strcat(buffer,fdes);
    strcat(buffer,size);
-   strncat(buffer,buf + z,900);
+   if(nb > 900) strncat(buffer,buf + z,900);
+   else strncat(buffer,buf + z,nb);
    printf("%s\n",buffer);
 
    n = write(sockfd,buffer,1024);
@@ -332,7 +347,7 @@ int netclose(int fd){
 int main(int argc, char const *argv[])
 {
    printf("client started attempting to connect on %s\n",argv[1]);
-   netserverinit(argv[1]);
+   netserverinit(argv[1], UNRESTRICTED);
    char* x = "qRCHVKQ2BQKRFLzRIy9VFxiKYFyWxIifa6uhnijIsBzkkFBv4WCVnW8YgZUsTMffE4whyvOEQa65iAlBpViXMSA3HruAq9QqeO15hevhyO2hu31hlxynnnpprj1yJkbt81GHcSUXNKkya2vtUkLvk6obQVtwHxYmHe9eACXpvQ0N3IMczNVQ0gDt39oAPicYYcHoPUT07UOWEoScYve1BVujDPITbYABNSvgPVrUNtUlASNRzTfNZZVytqByASzD93np2fQkoZjLlEUDYhsUW7zOKTpBzzfPRqPt1tyzsn08GUb1ggRK3hMzKEVETYBMGHiMfYOPwifKLQygRKuh7N31vJEUUmkykBALmMSTuh4VIp0LPrjWILxloJXS2GHqNI3f6E5a5Tt1XhkTX7PwJWjNecfkmtGGI9MDwFQAK1titlXt7DyTrYJhvp3S0hZHljfEWPckprQkS6GqgwGwNMDKBcZW9vgQS3e9FZo2IS2NApS5ZEYJRySohlb61Qm8LLW5BIwXGrCTtFLL6zupCHV7a5Zkx64u1l1Opjb703DCwj3aQUOumRT5u341wPrJNH9q71Bamnzaa5W5sFuBqX7fGgqkXoJRYrbL8BOVhsl1EbEwF8zTPaA1uRwIG3Bwn3tJe6zfPS4Xm9PhRRxEiXfqcWWlTVJIcsGffRMeUj0JT9F3JgzJgIbDLGxyjK8xvhli5OjVjyupfPgHmcWiZUIvPaZ0FSh9DKvPNNK0p58oV0nq5hIUh5ykz6QtjOtFhph0nh6DZs9WuwIPNJk1YSFgeCvLkTHRRWP4MXWWCKt3noT4jChWBLuerJPVLhQvi9P3U5wMMPX79ECMwx0pwrmsS6zVIRzEVmIuLSf9XT09tGzKjviHHaQgWSSewW58sbwyua9ZeYsFcf1Ay8uVeQ5XzqwSXT36WiQr61Cq2rRZshcmGwKyNghuGSn6glEC76AONo2f3XKg52RjARanDa9iyz3pmOImlkX9DtZzV0YgxpQk04ZS2xtqx01TYCMPmJ7D3BouvuYhggPYl3oL0IV5PqN7vHpIeq982kcFJ1NXwUI4ZRpMG2v2DgPGruOhfx5M6Qs9YAYY";
    //char* y = malloc(1026);
    int fd = netopen("file.txt",O_RDWR);

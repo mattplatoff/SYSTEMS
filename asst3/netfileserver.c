@@ -14,8 +14,18 @@
 #include <errno.h>
 
 #define PORT_NUM 8686
+#define UNRESTRICTED 0
+#define EXCLUSIVE 1
+#define TRANSACTION 2
 
+typedef struct fdData
+{
+  int fd;
+  int mode;
+  struct fdData * next;
+} fdData;
 
+fdData * head = NULL;
 
 int lRead(char* buff, char* readTo, int size){
   int fdes, i, j, n;
@@ -40,17 +50,26 @@ int lopen(char * buff){
   printf("local open\n");
   char path[1024];
   char flag[3];
-  int i, iflag, fdes, networkfdes;
+  char mode[2];
+  int i, j, iflag, fdes, networkfdes, imode;
 
   //pull params out of buffer 
-  for (i=6;buff[i]!=':';i++)
-      ;
+  for (i=6;buff[i]!=':';i++);
+    printf("i: %d\n", i);
   memcpy(path,&buff[6],i-6);
-  path[i-5] = '\0';
+  path[i-6] = '\0';
   memcpy(flag,&buff[i+1],2);
   flag[2] = '\0';
-  printf("%s\n",path);
-  printf("%s\n",flag);
+
+  i++;  
+  for (j=i;buff[j]!=':';j++);
+  strncpy(mode,&buff[j+1],1);
+  mode[2] = '\0';
+  imode = atoi(mode);
+
+  printf("path: %s\n",path);
+  printf("flag: %s\n",flag);
+  printf("mode: %d\n",imode);
 
   if (!strncmp(flag,"r-",2)){
     iflag=O_RDONLY;
