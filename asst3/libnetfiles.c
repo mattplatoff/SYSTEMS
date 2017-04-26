@@ -45,8 +45,8 @@ int netserverinit(const char* hostname){
    server = gethostbyname(hostname);
    
    if (server == NULL) {
-      fprintf(stderr,"ERROR, no such host\n");
-      exit(0);
+      herror("ERROR, no such host\n");
+      return -1;
    }
 
    printf("got server \n");
