@@ -35,7 +35,7 @@ int lRead(char* buff, char* readTo, int size){
   char* fd = (char*)malloc(i-5);
   printf("--%s,%d\n",buff,i);
   strncpy(fd, &buff[6], i-6);
-  fd[i-5] = '\0';
+  fd[i-6] = '\0';
   fdes = atoi(fd)*-1;
   free(fd);
 
@@ -64,7 +64,7 @@ int lopen(char * buff){
   i++;  
   for (j=i;buff[j]!=':';j++);
   strncpy(mode,&buff[j+1],1);
-  mode[2] = '\0';
+  mode[1] = '\0';
   imode = atoi(mode);
 
   printf("path: %s\n",path);
@@ -97,7 +97,7 @@ int lclose(char* buff){
   for(i = 6; buff[i]!=':'; i++);
     char* num = (char*)malloc(i-5);
     strncpy(num,&buff[6],i-6);
-    num[i-5] = '\0';
+    num[i-6] = '\0';
     fdes = atoi(num) * -1;
     free(num);
 
@@ -218,7 +218,7 @@ void* processConnection(void* fd){
           for(j=i;buffer[j]!=':';j++);
           char* s = (char*)malloc((j-i) + 1);
           strncpy(s, &buffer[i], j-i);
-          s[(j-i)+1] = '\0';
+          s[(j-i)] = '\0';
           size = atoi(s);
 
           char* readTo = (char*)malloc(size + 1);

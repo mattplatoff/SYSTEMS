@@ -126,7 +126,7 @@ int netopen(const char* pathname, int flags){
    for(i = 6; buffer[i]!=':'; i++);
    char* num = (char*)malloc(i-5);
    strncpy(num,&buffer[6],i-6);
-   num[i-5] = '\0';
+   num[i-6] = '\0';
    fdes = atoi(num);
    printf("%d\n", fdes);
    if (fdes > 0){
